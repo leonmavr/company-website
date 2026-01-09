@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contact · Gesleap</title>
+    <meta name="description" content="Contact Gesleap" />
+    <link rel="stylesheet" href="../styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      referrerpolicy="no-referrer"
+    />
+  </head>
+  <body>
+    <div class="app" role="application">
+      <a class="corner-logo" href="../index.html" aria-label="Gesleap home">
+        <img class="corner-logo__img" src="https://raw.githubusercontent.com/leonmavr/company-website/refs/heads/master/logo.png" alt="Gesleap logo" />
+      </a>
+
+      <header class="topbar">
+        <div class="shell">
+          <nav class="tabs" aria-label="Primary">
+            <a class="glass tab" href="../index.html">Home</a>
+            <a class="glass tab" href="../about_us/index.html">About us</a>
+            <a class="glass tab" href="../products/index.html">Products</a>
+            <a class="glass tab is-active" href="./index.html" aria-current="page">Contact</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="stage" aria-live="polite">
+        <div class="shell">
+          <section class="panel" aria-label="Gesleap panel">
+            <div class="panel__bg" aria-hidden="true"></div>
+            <div class="panel__content">
+              <div class="copy">
+                <p class="subtitle">Reach out to collaborate, demo, or partner with us.</p>
+
+                <div class="contact-stack" aria-label="Contact links">
+                  <button class="contact-row" data-action="reveal-email" aria-haspopup="dialog" aria-label="Show email">
+                    <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+                    <span data-contact="email-label"></span>
+                  </button>
+
+                  <div class="contact-row" role="group" aria-label="Address">
+                    <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                    <span data-contact="address"></span>
+                  </div>
+
+                  <a class="contact-row" data-contact="linkein.com/in/lmavropalias" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                    <i class="fa-brands fa-linkedin" aria-hidden="true"></i>
+                    <span data-contact="linkedin-label"></span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+
+      <footer class="bottombar">
+        <div class="shell">
+          <section class="info-row" aria-label="Contact details">
+            <button class="info-chip glass" data-action="reveal-email" aria-haspopup="dialog" aria-label="Show email">
+              <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+              <span data-contact="email-label"></span>
+            </button>
+            <div class="info-chip glass" role="group" aria-label="Address">
+              <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+              <span data-contact="address"></span>
+            </div>
+          </section>
+        </div>
+      </footer>
+    </div>
+
+    <script src="../main.js" defer></script>
+  </body>
+</html>
