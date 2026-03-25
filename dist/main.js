@@ -1,96 +1,141 @@
-const tabs = Array.from(document.querySelectorAll('[data-tab]'));
-const panels = Array.from(document.querySelectorAll('[data-panel]'));
-
-function setActive(tabName) {
-  for (const btn of tabs) {
-    const isActive = btn.dataset.tab === tabName;
-    btn.classList.toggle('is-active', isActive);
-    if (isActive) btn.setAttribute('aria-current', 'page');
-    else btn.removeAttribute('aria-current');
-  }
-
-  for (const panel of panels) {
-    panel.classList.toggle('is-hidden', panel.dataset.panel !== tabName);
-  }
-}
-
-tabs.forEach((btn) => {
-  btn.addEventListener('click', () => setActive(btn.dataset.tab));
-});
-
-document.addEventListener('click', (e) => {
-  const el = e.target.closest('[data-action]');
-  if (!el) return;
-  e.preventDefault();
-
-  const action = el.dataset.action;
-  if (action === 'contact') setActive('contact');
-  if (action === 'demo') setActive('products');
-});
-
-/* Centralized contact info (edit here once) */
 const CONTACT = {
-  emailLabel: 'Email (click me)',
-  emailUser: 'contact',
-  emailDomain: 'gesleap.com',
-  address: 'Gesleap OÜ, under Dalanta OÜ, Harju maakond, Tallinn, Pärnu mnt 105, 11312',
-  linkedinLabel: 'LinkedIn',
-  linkedinUrl: 'https://www.linkedin.com/',
+  emailLabel: "Email",
+  emailUser: "contact",
+  emailDomain: "gesleap.com",
+  address: "Gesleap OÜ, under Dalanta OÜ, Harju maakond, Tallinn, Pärnu mnt 105, 11312",
+  linkedinLabel: "LinkedIn",
+  linkedinUrl: "https://www.linkedin.com/in/lmavropalias/"
 };
 
-function getContactEmail(){
+const navItems = Array.from(document.querySelectorAll(".nav-item.has-menu"));
+const navToggles = Array.from(document.querySelectorAll(".nav-toggle"));
+
+function getContactEmail() {
   return `${CONTACT.emailUser}@${CONTACT.emailDomain}`;
 }
 
-function hydrateContactInfo(){
-  document.querySelectorAll('[data-contact="email-label"]').forEach((el) => {
-    el.textContent = CONTACT.emailLabel;
+function hydrateContactInfo() {
+  document.querySelectorAll('[data-contact="email-label"]').forEach((element) => {
+    element.textContent = CONTACT.emailLabel;
   });
 
-  document.querySelectorAll('[data-contact="address"]').forEach((el) => {
-    el.textContent = CONTACT.address;
+  document.querySelectorAll('[data-contact="address"]').forEach((element) => {
+    element.textContent = CONTACT.address;
   });
 
-  document.querySelectorAll('[data-contact="linkedin-label"]').forEach((el) => {
-    el.textContent = CONTACT.linkedinLabel;
+  document.querySelectorAll('[data-contact="linkedin-label"]').forEach((element) => {
+    element.textContent = CONTACT.linkedinLabel;
   });
 
-  document.querySelectorAll('[data-contact="linkedin-url"]').forEach((el) => {
-    if (el instanceof HTMLAnchorElement) {
-      el.href = CONTACT.linkedinUrl;
+  document.querySelectorAll('[data-contact="linkedin-url"]').forEach((element) => {
+    if (element instanceof HTMLAnchorElement) {
+      element.href = CONTACT.linkedinUrl;
     }
   });
 }
 
-function _showEmailModal(email){
-  const overlay = document.createElement('div');
-  overlay.className = 'email-overlay';
-  overlay.innerHTML = `
-    <div class="email-dialog" role="dialog" aria-modal="true" aria-label="Contact email">
-      <div class="email-inner">
-        <button class="email-close" aria-label="Close">✕</button>
-        <div class="email-body">
-          <p class="email-text">${email}</p>
-        </div>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(overlay);
+function closeMenus(exceptItem = null) {
+  navItems.forEach((item) => {
+    const isTarget = item === exceptItem;
+    item.classList.toggle("is-open", isTarget);
 
-  const remove = () => { overlay.remove(); document.removeEventListener('keydown', onKey); };
-  function onKey(ev){ if (ev.key === 'Escape') remove(); }
-
-  overlay.addEventListener('click', (ev) => { if (ev.target === overlay) remove(); });
-  overlay.querySelector('.email-close').addEventListener('click', remove);
-  document.addEventListener('keydown', onKey);
+    const toggle = item.querySelector(".nav-toggle");
+    if (toggle) {
+      toggle.setAttribute("aria-expanded", String(isTarget));
+    }
+  });
 }
 
-document.addEventListener('click', (e) => {
-  const btn = e.target.closest('[data-action="reveal-email"]');
-  if (!btn) return;
-  e.preventDefault();
-  _showEmailModal(getContactEmail());
+navToggles.forEach((toggle) => {
+  toggle.addEventListener("click", (event) => {
+    event.preventDefault();
+
+    const item = toggle.closest(".nav-item");
+    const shouldOpen = item && !item.classList.contains("is-open");
+    closeMenus(shouldOpen ? item : null);
+  });
 });
 
-// main.js is loaded with `defer`, so DOM is ready here.
+document.addEventListener("click", (event) => {
+  const target = event.target;
+
+  if (!(target instanceof Element) || !target.closest(".site-nav")) {
+    closeMenus();
+  }
+
+  const emailTrigger = target instanceof Element ? target.closest('[data-action="reveal-email"]') : null;
+  if (!emailTrigger) {
+    return;
+  }
+
+  event.preventDefault();
+  showEmailModal(getContactEmail());
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeMenus();
+  }
+});
+
+window.addEventListener("resize", () => closeMenus());
+
+function showEmailModal(email) {
+  const existing = document.querySelector(".email-overlay");
+  if (existing) {
+    existing.remove();
+  }
+
+  const overlay = document.createElement("div");
+  overlay.className = "email-overlay";
+
+  const dialog = document.createElement("div");
+  dialog.className = "email-dialog";
+  dialog.setAttribute("role", "dialog");
+  dialog.setAttribute("aria-modal", "true");
+  dialog.setAttribute("aria-label", "Contact email");
+
+  const closeButton = document.createElement("button");
+  closeButton.className = "email-close";
+  closeButton.type = "button";
+  closeButton.setAttribute("aria-label", "Close");
+  closeButton.textContent = "✕";
+
+  const body = document.createElement("div");
+  body.className = "email-body";
+
+  const label = document.createElement("p");
+  label.className = "email-label";
+  label.textContent = "Gesleap contact";
+
+  const text = document.createElement("p");
+  text.className = "email-text";
+  text.textContent = email;
+
+  body.append(label, text);
+  dialog.append(closeButton, body);
+  overlay.appendChild(dialog);
+  document.body.appendChild(overlay);
+
+  const remove = () => {
+    overlay.remove();
+    document.removeEventListener("keydown", onKeyDown);
+  };
+
+  function onKeyDown(event) {
+    if (event.key === "Escape") {
+      remove();
+    }
+  }
+
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) {
+      remove();
+    }
+  });
+
+  closeButton.addEventListener("click", remove);
+  document.addEventListener("keydown", onKeyDown);
+}
+
 hydrateContactInfo();

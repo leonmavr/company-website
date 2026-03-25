@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>About us · Gesleap</title>
-    <meta name="description" content="About Gesleap" />
+    <title>Applications · Gesleap</title>
+    <meta name="description" content="Gesleap applications" />
     <link rel="stylesheet" href="../styles.css" />
     <link
       rel="stylesheet"
@@ -13,77 +13,140 @@
     />
   </head>
   <body>
-    <div class="app" role="application">
-      <a class="corner-logo" href="../index.html" aria-label="Gesleap home">
-        <img class="corner-logo__img" src="https://raw.githubusercontent.com/leonmavr/company-website/refs/heads/master/logo.png" alt="Gesleap logo" />
-      </a>
+    <div class="app">
+      <header class="site-header">
+        <div class="shell header-shell">
+          <a class="brand" href="../index.html" aria-label="Gesleap home">
+            <img
+              class="brand__mark"
+              src="https://raw.githubusercontent.com/leonmavr/company-website/refs/heads/master/logo.png"
+              alt="Gesleap logo"
+            />
+            <span class="brand__text">GESLEAP</span>
+          </a>
 
-      <header class="topbar">
-        <div class="shell">
-          <nav class="tabs" aria-label="Primary">
-            <a class="glass tab" href="../index.html">Home</a>
-            <a class="glass tab is-active" href="./index.html" aria-current="page">About us</a>
-            <a class="glass tab" href="../products/index.html">Products</a>
-            <a class="glass tab" href="../contact/index.html">Contact</a>
+          <nav class="site-nav" aria-label="Primary navigation">
+            <ul class="nav-list">
+              <li class="nav-item">
+                <a class="nav-link" href="../index.html">Home</a>
+              </li>
+              <li class="nav-item has-menu">
+                <button class="nav-link nav-toggle is-active" type="button" aria-expanded="false">
+                  Applications
+                </button>
+                <div class="nav-dropdown">
+                  <a href="#application-1">Application 1</a>
+                  <a href="#application-2">Application 2</a>
+                </div>
+              </li>
+              <li class="nav-item has-menu">
+                <button class="nav-link nav-toggle" type="button" aria-expanded="false">
+                  Products
+                </button>
+                <div class="nav-dropdown">
+                  <a href="../products/index.html#product-1">Product 1</a>
+                  <a href="../products/index.html#product-2">Product 2</a>
+                </div>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="../contact/index.html">Contact</a>
+              </li>
+            </ul>
           </nav>
+
+          <div class="header-spacer" aria-hidden="true"></div>
         </div>
       </header>
 
-      <main class="stage" aria-live="polite">
-        <div class="shell">
-          <section class="panel panel--about" aria-label="Gesleap panel">
-            <div class="panel__bg" aria-hidden="true"></div>
-            <div class="panel__content">
-              <div class="copy">
-                <p class="subtitle">Who We Are</p>
-                <p>Gesleap is a newly formed technology company focused on how humans interact with the 
-                  computers. We specialize in converting hand motions and 
-                  gestures into input. Unlike other competitors, the only hardware required is a standard 
-                  webcam. We leverage computer vision algorithms joined with machine learning techniques to
-                  accurately track hand movements and translate them into commands.
-                  </p>
+      <main class="page-main">
+        <div class="shell page-shell">
+          <section class="page-intro">
+            <p class="kicker">Applications</p>
+            <h1 class="page-title">Where gesture control becomes operational.</h1>
+            <p class="page-summary">
+              The core system is designed to slot into different environments while keeping the same
+              sleek interaction model: direct, low-friction, and hardware-light.
+            </p>
+          </section>
 
-                  <p class="subtitle">Our Mission</p>
-                  <p>We envision a world where computers respond to intuitive human movement seamlessly
-                    and effortlessly. Our mission is to develop cutting-edge gesture recognition technology that:</p>
+          <section class="content-frame">
+            <div class="cards-grid">
+              <article class="feature-card" id="application-1">
+                <h2>Application 1</h2>
+                <p>
+                  Hands-free workstation control for situations where the operator must stay focused
+                  on movement, safety, or sterile handling.
+                </p>
+                <ul class="feature-list">
+                  <li>Rapid setup with a standard webcam.</li>
+                  <li>Gesture-to-command mapping for software tools and workflows.</li>
+                  <li>Reduced dependency on extra peripherals.</li>
+                </ul>
+              </article>
 
-                  <ul class="mission-list">
-                    <li>Can be set up within minutes.</li>
-                    <li>Works reliably on a wide range of devices without additional hardware.</li>
-                    <li>Can be tailored to the customer's application needs.</li>
-                  </ul>
-                  <p class="subtitle">Current State</p>
-                  <p>We are in pre-seed phase with a working prototype.</p>
-                  <p class="subtitle">Demo video</p>
-              </div>
-              <div class="panel__media">
+              <article class="feature-card" id="application-2">
+                <h2>Application 2</h2>
+                <p>
+                  Embedded and custom device interfaces that need clean control logic without a noisy
+                  physical control surface.
+                </p>
+                <ul class="feature-list">
+                  <li>Designed to adapt to product-specific interaction models.</li>
+                  <li>Useful for kiosks, demos, and specialized equipment.</li>
+                  <li>Modern visual layer that matches technical hardware products.</li>
+                </ul>
+              </article>
+            </div>
+
+            <div class="video-grid">
+              <article class="video-card">
+                <h2>Demo video 01</h2>
                 <div class="video-wrap">
-                  <video controls preload="metadata" playsinline aria-label="Gesleap demo video">
-                    <source src="https://github.com/leonmavr/company-website/raw/refs/heads/master/demo%20v0.2%20July%202025.mp4" type="video/mp4" />
+                  <video controls preload="metadata" playsinline aria-label="Gesleap demo video 1">
+                    <source
+                      src="https://github.com/leonmavr/company-website/raw/refs/heads/master/demo%20v0.2%20July%202025.mp4"
+                      type="video/mp4"
+                    />
                   </video>
                 </div>
+              </article>
+
+              <article class="video-card">
+                <h2>Demo video 02</h2>
                 <div class="video-wrap">
-                  <video controls preload="metadata" playsinline aria-label="Gesleap demo video">
-                    <source src="https://github.com/leonmavr/company-website/raw/refs/heads/master/gesleap_demo_jan_26.mp4" type="video/mp4" />
+                  <video controls preload="metadata" playsinline aria-label="Gesleap demo video 2">
+                    <source
+                      src="https://github.com/leonmavr/company-website/raw/refs/heads/master/gesleap_demo_jan_26.mp4"
+                      type="video/mp4"
+                    />
                   </video>
                 </div>
-              </div>
+              </article>
             </div>
           </section>
         </div>
       </main>
 
-      <footer class="bottombar">
-        <div class="shell">
-          <section class="info-row" aria-label="Contact details">
-            <button class="info-chip glass" data-action="reveal-email" aria-haspopup="dialog" aria-label="Show email">
-              <i class="fa-regular fa-envelope" aria-hidden="true"></i>
-              <span data-contact="email-label"></span>
-            </button>
-            <div class="info-chip glass" role="group" aria-label="Address">
-              <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
-              <span data-contact="address"></span>
-            </div>
+      <footer class="site-footer">
+        <div class="shell footer-shell">
+          <section class="footer-column">
+            <h2 class="footer-title">GESLEAP</h2>
+            <p class="footer-copy">
+              Architecting gesture-first control systems with software and hardware integration that
+              stays exact, calm, and production-ready.
+            </p>
+          </section>
+          <section class="footer-column">
+            <h2 class="footer-title">Resources</h2>
+            <a href="./index.html">Applications</a>
+            <a href="../products/index.html">Product roadmap</a>
+            <a href="../contact/index.html">Contact support</a>
+          </section>
+          <section class="footer-column">
+            <h2 class="footer-title">Legal</h2>
+            <a href="../contact/index.html#privacy">Privacy Policy</a>
+            <a href="../contact/index.html#terms">Terms of Service</a>
+            <p class="footer-note">© 2026 Gesleap. All rights reserved.</p>
           </section>
         </div>
       </footer>
