@@ -64,12 +64,19 @@ document.addEventListener("click", (event) => {
   }
 
   const emailTrigger = target instanceof Element ? target.closest('[data-action="reveal-email"]') : null;
-  if (!emailTrigger) {
+  if (emailTrigger) {
+    event.preventDefault();
+    showEmailModal(getContactEmail());
+    return;
+  }
+
+  const paymentTrigger = target instanceof Element ? target.closest('[data-action="show-payment-popup"]') : null;
+  if (!paymentTrigger) {
     return;
   }
 
   event.preventDefault();
-  showEmailModal(getContactEmail());
+  showPaymentModal();
 });
 
 document.addEventListener("keydown", (event) => {
@@ -113,6 +120,78 @@ function showEmailModal(email) {
   text.textContent = email;
 
   body.append(label, text);
+  dialog.append(closeButton, body);
+  overlay.appendChild(dialog);
+  document.body.appendChild(overlay);
+
+  const remove = () => {
+    overlay.remove();
+    document.removeEventListener("keydown", onKeyDown);
+  };
+
+  function onKeyDown(event) {
+    if (event.key === "Escape") {
+      remove();
+    }
+  }
+
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) {
+      remove();
+    }
+  });
+
+  closeButton.addEventListener("click", remove);
+  document.addEventListener("keydown", onKeyDown);
+}
+
+function showPaymentModal() {
+  const existing = document.querySelector(".payment-overlay");
+  if (existing) {
+    existing.remove();
+  }
+
+  const overlay = document.createElement("div");
+  overlay.className = "payment-overlay";
+
+  const dialog = document.createElement("div");
+  dialog.className = "payment-dialog";
+  dialog.setAttribute("role", "dialog");
+  dialog.setAttribute("aria-modal", "true");
+  dialog.setAttribute("aria-label", "Payment popup placeholder");
+
+  const closeButton = document.createElement("button");
+  closeButton.className = "payment-close";
+  closeButton.type = "button";
+  closeButton.setAttribute("aria-label", "Close");
+  closeButton.textContent = "✕";
+
+  const body = document.createElement("div");
+  body.className = "payment-body";
+
+  const label = document.createElement("p");
+  label.className = "payment-label";
+  label.textContent = "Checkout";
+
+  const title = document.createElement("p");
+  title.className = "payment-title";
+  title.textContent = "Full version purchase";
+
+  const copy = document.createElement("p");
+  copy.className = "payment-copy";
+  copy.textContent = "Payment is not implemented yet. This popup reserves the purchase flow area for future credit card and additional payment methods.";
+
+  const actions = document.createElement("div");
+  actions.className = "payment-actions";
+
+  ["Credit card", "PayPal", "Bank transfer"].forEach((labelText) => {
+    const chip = document.createElement("div");
+    chip.className = "payment-method";
+    chip.textContent = labelText;
+    actions.appendChild(chip);
+  });
+
+  body.append(label, title, copy, actions);
   dialog.append(closeButton, body);
   overlay.appendChild(dialog);
   document.body.appendChild(overlay);

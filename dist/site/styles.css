@@ -314,6 +314,92 @@ select {
   gap: 1rem;
 }
 
+.product-stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.product-row {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 6fr) minmax(5.5rem, 1fr);
+  gap: 1rem;
+  align-items: stretch;
+  padding: 1.15rem;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.product-row__media {
+  min-width: 0;
+  align-self: center;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.product-row__media img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.product-row__body {
+  display: grid;
+  gap: 0.9rem;
+  min-width: 0;
+  align-self: center;
+}
+
+.product-row__body h2 {
+  margin: 0;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.product-row__body p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.product-row__action {
+  display: flex;
+  align-self: stretch;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+  padding-left: 0.35rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.product-buy-button {
+  width: 100%;
+  min-height: 100%;
+  border: 1px solid rgba(240, 106, 43, 0.38);
+  background: rgba(240, 106, 43, 0.14);
+  color: var(--text);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.product-buy-button:hover,
+.product-buy-button:focus-visible {
+  background: rgba(240, 106, 43, 0.24);
+  border-color: rgba(240, 106, 43, 0.62);
+  outline: none;
+}
+
+.product-buy-button:active {
+  transform: translateY(1px);
+}
+
 .applications-top-grid,
 .applications-bottom-grid {
   display: grid;
@@ -648,7 +734,8 @@ select {
   font-size: 0.92rem;
 }
 
-.email-overlay {
+.email-overlay,
+.payment-overlay {
   position: fixed;
   inset: 0;
   display: grid;
@@ -658,7 +745,8 @@ select {
   z-index: 40;
 }
 
-.email-dialog {
+.email-dialog,
+.payment-dialog {
   width: min(30rem, 100%);
   padding: 1.4rem;
   background: #f7fafc;
@@ -667,7 +755,8 @@ select {
   box-shadow: var(--shadow);
 }
 
-.email-close {
+.email-close,
+.payment-close {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -680,12 +769,14 @@ select {
   cursor: pointer;
 }
 
-.email-body {
+.email-body,
+.payment-body {
   display: grid;
   gap: 0.5rem;
 }
 
-.email-label {
+.email-label,
+.payment-label {
   margin: 0;
   color: #4a5568;
   font-size: 0.82rem;
@@ -693,11 +784,33 @@ select {
   letter-spacing: 0.12em;
 }
 
-.email-text {
+.email-text,
+.payment-title {
   margin: 0;
   font-family: "Space Grotesk", sans-serif;
   font-size: 1.35rem;
   font-weight: 700;
+}
+
+.payment-copy {
+  margin: 0;
+  color: #4a5568;
+  line-height: 1.65;
+}
+
+.payment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.payment-method {
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(8, 22, 47, 0.14);
+  background: rgba(8, 22, 47, 0.05);
+  color: #08162f;
+  font-weight: 600;
 }
 
 @keyframes dropdown-slide {
@@ -786,6 +899,21 @@ select {
   .stats-grid,
   .cards-grid {
     grid-template-columns: 1fr;
+  }
+
+  .product-row {
+    grid-template-columns: 1fr;
+  }
+
+  .product-row__action {
+    min-height: 3.25rem;
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .product-buy-button {
+    min-height: 3.25rem;
   }
 
   .application-card {
