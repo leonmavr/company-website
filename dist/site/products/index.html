@@ -44,8 +44,8 @@
                   Products
                 </button>
                 <div class="nav-dropdown">
-                  <a href="#product-1">Product 1</a>
-                  <a href="#product-2">Product 2</a>
+                  <a href="#product-1">Freemium</a>
+                  <a href="#product-2">Full version</a>
                 </div>
               </li>
               <li class="nav-item">
@@ -62,39 +62,58 @@
         <div class="shell page-shell">
           <section class="page-intro">
             <p class="kicker">Products</p>
-            <h1 class="page-title">Product paths built around a single interaction engine.</h1>
+            <h1 class="page-title">Coming soon...</h1>
             <p class="page-summary">
-              The product layer is structured for both direct use and integration, while the visual
-              system stays aligned with the same dark, sharp, technical character across the site.
             </p>
           </section>
 
-          <section class="content-frame">
-            <div class="cards-grid">
-              <article class="feature-card" id="product-1">
-                <h2>Product 1</h2>
-                <p>
-                  A standalone application package for teams that want an immediate gesture-control
-                  layer without managing extra hardware complexity.
-                </p>
-                <ul class="feature-list">
-                  <li>Freemium and full versions planned.</li>
-                  <li>Focused on fast onboarding and clear configuration.</li>
-                  <li>Designed to drop into modern workstation setups.</li>
-                </ul>
+          <section class="content-frame product-frame">
+            <div class="product-stack">
+              <article class="product-row" id="product-1">
+                <div class="product-row__media">
+                  <img src="../poster.png" alt="Placeholder visual for product 1" />
+                </div>
+                <div class="product-row__body">
+                  <h2>Freemium</h2>
+                  <p>
+                    A standalone application package for teams that want an immediate gesture-control
+                    layer without managing extra hardware complexity.
+                  </p>
+                  <ul class="feature-list">
+                    <li>Freemium and full versions planned.</li>
+                    <li>Focused on fast onboarding and clear configuration.</li>
+                    <li>Designed to drop into modern workstation setups.</li>
+                  </ul>
+                </div>
+                <div class="product-row__action" aria-hidden="true"></div>
               </article>
 
-              <article class="feature-card" id="product-2">
-                <h2>Product 2</h2>
-                <p>
-                  An SDK and integration path for partners who want to embed Gesleap interaction into
-                  their own products and experiences.
-                </p>
-                <ul class="feature-list">
-                  <li>Built for tailored application behavior.</li>
-                  <li>Supports product-specific command mapping.</li>
-                  <li>Fits OEM and custom software workflows.</li>
-                </ul>
+              <article class="product-row" id="product-2">
+                <div class="product-row__media">
+                  <img src="../poster.png" alt="Placeholder visual for product 2" />
+                </div>
+                <div class="product-row__body">
+                  <h2>Full version</h2>
+                  <p>
+                    An SDK and integration path for partners who want to embed Gesleap interaction into
+                    their own products and experiences.
+                  </p>
+                  <ul class="feature-list">
+                    <li>Built for tailored application behavior.</li>
+                    <li>Supports product-specific command mapping.</li>
+                    <li>Fits OEM and custom software workflows.</li>
+                  </ul>
+                </div>
+                <div class="product-row__action">
+                  <button
+                    class="product-buy-button"
+                    type="button"
+                    data-action="show-payment-popup"
+                    aria-label="Open payment popup for the full version"
+                  >
+                    Buy
+                  </button>
+                </div>
               </article>
             </div>
           </section>
