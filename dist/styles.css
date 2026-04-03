@@ -298,6 +298,7 @@ select {
 
 .content-frame {
   position: relative;
+  margin-top: 25vh;
   padding: clamp(1.5rem, 2.8vw, 2.5rem);
   background: linear-gradient(180deg, rgba(13, 35, 67, 0.82), rgba(7, 20, 40, 0.72));
   border: 1px solid rgba(255, 255, 255, 0.08);
