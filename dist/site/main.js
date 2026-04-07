@@ -7,6 +7,10 @@ const CONTACT = {
   linkedinUrl: "https://www.linkedin.com/in/lmavropalias/"
 };
 
+const SITE_COPY = {
+  footerCopy: "Converting your gestures into input."
+};
+
 const navItems = Array.from(document.querySelectorAll(".nav-item.has-menu"));
 const navToggles = Array.from(document.querySelectorAll(".nav-toggle"));
 
@@ -31,6 +35,12 @@ function hydrateContactInfo() {
     if (element instanceof HTMLAnchorElement) {
       element.href = CONTACT.linkedinUrl;
     }
+  });
+}
+
+function hydrateSiteCopy() {
+  document.querySelectorAll('[data-site-copy="footer-copy"]').forEach((element) => {
+    element.textContent = SITE_COPY.footerCopy;
   });
 }
 
@@ -218,3 +228,4 @@ function showPaymentModal() {
 }
 
 hydrateContactInfo();
+hydrateSiteCopy();
