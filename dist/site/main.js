@@ -77,16 +77,7 @@ document.addEventListener("click", (event) => {
   if (emailTrigger) {
     event.preventDefault();
     showEmailModal(getContactEmail());
-    return;
   }
-
-  const paymentTrigger = target instanceof Element ? target.closest('[data-action="show-payment-popup"]') : null;
-  if (!paymentTrigger) {
-    return;
-  }
-
-  event.preventDefault();
-  showPaymentModal();
 });
 
 document.addEventListener("keydown", (event) => {
@@ -155,77 +146,102 @@ function showEmailModal(email) {
   document.addEventListener("keydown", onKeyDown);
 }
 
-function showPaymentModal() {
-  const existing = document.querySelector(".payment-overlay");
-  if (existing) {
-    existing.remove();
+function setPaypalResultMessage(container, message, isError = false) {
+  const resultNode = container.querySelector("#paypal-result-message");
+  if (!resultNode) {
+    return;
   }
 
-  const overlay = document.createElement("div");
-  overlay.className = "payment-overlay";
+  resultNode.textContent = message;
+  resultNode.classList.toggle("is-error", isError);
+}
 
-  const dialog = document.createElement("div");
-  dialog.className = "payment-dialog";
-  dialog.setAttribute("role", "dialog");
-  dialog.setAttribute("aria-modal", "true");
-  dialog.setAttribute("aria-label", "Payment popup placeholder");
-
-  const closeButton = document.createElement("button");
-  closeButton.className = "payment-close";
-  closeButton.type = "button";
-  closeButton.setAttribute("aria-label", "Close");
-  closeButton.textContent = "✕";
-
-  const body = document.createElement("div");
-  body.className = "payment-body";
-
-  const label = document.createElement("p");
-  label.className = "payment-label";
-  label.textContent = "Checkout";
-
-  const title = document.createElement("p");
-  title.className = "payment-title";
-  title.textContent = "Full version purchase";
-
-  const copy = document.createElement("p");
-  copy.className = "payment-copy";
-  copy.textContent = "Payment is not implemented yet. This popup reserves the purchase flow area for future credit card and additional payment methods.";
-
-  const actions = document.createElement("div");
-  actions.className = "payment-actions";
-
-  ["Credit card", "PayPal", "Bank transfer"].forEach((labelText) => {
-    const chip = document.createElement("div");
-    chip.className = "payment-method";
-    chip.textContent = labelText;
-    actions.appendChild(chip);
-  });
-
-  body.append(label, title, copy, actions);
-  dialog.append(closeButton, body);
-  overlay.appendChild(dialog);
-  document.body.appendChild(overlay);
-
-  const remove = () => {
-    overlay.remove();
-    document.removeEventListener("keydown", onKeyDown);
-  };
-
-  function onKeyDown(event) {
-    if (event.key === "Escape") {
-      remove();
-    }
+function initPaypalCheckout() {
+  const checkoutRoot = document.querySelector("[data-paypal-button]");
+  if (!checkoutRoot) {
+    return;
   }
 
-  overlay.addEventListener("click", (event) => {
-    if (event.target === overlay) {
-      remove();
+  const buttonContainer = checkoutRoot.querySelector("#paypal-button-container");
+  if (!buttonContainer) {
+    return;
+  }
+
+  if (!window.paypal || typeof window.paypal.Buttons !== "function") {
+    setPaypalResultMessage(checkoutRoot, "PayPal checkout is unavailable right now. Please try again later.", true);
+    return;
+  }
+
+  const productId = checkoutRoot.dataset.productId || "gesleap-full-version";
+  const productName = checkoutRoot.dataset.productName || "Gesleap Full version";
+  const amount = checkoutRoot.dataset.amount || "25.00";
+  const currency = checkoutRoot.dataset.currency || "USD";
+  const quantity = checkoutRoot.dataset.quantity || "1";
+
+  const paypalButtons = window.paypal.Buttons({
+    style: {
+      shape: "rect",
+      layout: "vertical",
+      color: "gold",
+      label: "paypal"
+    },
+    async createOrder(data, actions) {
+      return actions.order.create({
+        purchase_units: [
+          {
+            custom_id: productId,
+            description: productName,
+            amount: {
+              currency_code: currency,
+              value: amount
+            }
+          }
+        ],
+        application_context: {
+          shipping_preference: "NO_SHIPPING"
+        }
+      });
+    },
+    async onApprove(data, actions) {
+      try {
+        const orderData = await actions.order.capture();
+        const transaction = orderData?.purchase_units?.[0]?.payments?.captures?.[0]
+          || orderData?.purchase_units?.[0]?.payments?.authorizations?.[0];
+        const transactionId = transaction?.id || data.orderID;
+        const transactionStatus = transaction?.status || "COMPLETED";
+
+        setPaypalResultMessage(
+          checkoutRoot,
+          `Payment completed. Transaction ${transactionStatus}: ${transactionId}`
+        );
+        console.log("PayPal capture result", {
+          orderData,
+          productId,
+          productName,
+          quantity
+        });
+      } catch (error) {
+        console.error(error);
+        setPaypalResultMessage(checkoutRoot, "Sorry, your transaction could not be processed.", true);
+      }
+    },
+    onError(error) {
+      console.error(error);
+      setPaypalResultMessage(checkoutRoot, "Sorry, your transaction could not be processed.", true);
     }
   });
 
-  closeButton.addEventListener("click", remove);
-  document.addEventListener("keydown", onKeyDown);
+  if (typeof paypalButtons.isEligible === "function" && !paypalButtons.isEligible()) {
+    setPaypalResultMessage(checkoutRoot, "PayPal checkout is not available for this browser or device.", true);
+    return;
+  }
+
+  paypalButtons.render(buttonContainer).catch((error) => {
+    console.error(error);
+    setPaypalResultMessage(checkoutRoot, "PayPal checkout failed to load. Please refresh and try again.", true);
+  });
 }
 
 hydrateContactInfo();
 hydrateSiteCopy();
+initPaypalCheckout();

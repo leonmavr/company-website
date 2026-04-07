@@ -321,7 +321,7 @@ select {
 
 .product-row {
   display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 6fr) minmax(5.5rem, 1fr);
+  grid-template-columns: minmax(0, 3fr) minmax(0, 6fr) minmax(18rem, 30rem);
   gap: 1rem;
   align-items: stretch;
   padding: 1.15rem;
@@ -374,30 +374,55 @@ select {
   border-left: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.product-buy-button {
+.product-row__action--checkout {
+  align-items: stretch;
+}
+
+.paypal-checkout {
+  display: grid;
+  align-content: center;
+  gap: 0.75rem;
+  width: min(100%, 36rem);
+}
+
+.product-download-button {
   width: 100%;
-  min-height: 100%;
+  min-height: 3.25rem;
+  padding: 0.65rem 1rem;
   border: 1px solid rgba(240, 106, 43, 0.38);
   background: rgba(240, 106, 43, 0.14);
   color: var(--text);
   font-family: "Space Grotesk", sans-serif;
-  font-size: 0.82rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+  border-radius: 999px;
   cursor: pointer;
   transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
 }
 
-.product-buy-button:hover,
-.product-buy-button:focus-visible {
+.product-download-button:hover,
+.product-download-button:focus-visible {
   background: rgba(240, 106, 43, 0.24);
   border-color: rgba(240, 106, 43, 0.62);
   outline: none;
 }
 
-.product-buy-button:active {
-  transform: translateY(1px);
+.paypal-button-container {
+  width: 100%;
+}
+
+.paypal-result-message {
+  margin: 0;
+  min-height: 2.6rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.paypal-result-message.is-error {
+  color: #ffb7a3;
 }
 
 .applications-top-grid,
@@ -737,8 +762,7 @@ select {
   font-size: 0.92rem;
 }
 
-.email-overlay,
-.payment-overlay {
+.email-overlay {
   position: fixed;
   inset: 0;
   display: grid;
@@ -748,8 +772,7 @@ select {
   z-index: 40;
 }
 
-.email-dialog,
-.payment-dialog {
+.email-dialog {
   width: min(30rem, 100%);
   padding: 1.4rem;
   background: #f7fafc;
@@ -758,8 +781,7 @@ select {
   box-shadow: var(--shadow);
 }
 
-.email-close,
-.payment-close {
+.email-close {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -772,14 +794,12 @@ select {
   cursor: pointer;
 }
 
-.email-body,
-.payment-body {
+.email-body {
   display: grid;
   gap: 0.5rem;
 }
 
-.email-label,
-.payment-label {
+.email-label {
   margin: 0;
   color: #4a5568;
   font-size: 0.82rem;
@@ -787,33 +807,11 @@ select {
   letter-spacing: 0.12em;
 }
 
-.email-text,
-.payment-title {
+.email-text {
   margin: 0;
   font-family: "Space Grotesk", sans-serif;
   font-size: 1.35rem;
   font-weight: 700;
-}
-
-.payment-copy {
-  margin: 0;
-  color: #4a5568;
-  line-height: 1.65;
-}
-
-.payment-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 0.75rem;
-}
-
-.payment-method {
-  padding: 0.8rem 1rem;
-  border: 1px solid rgba(8, 22, 47, 0.14);
-  background: rgba(8, 22, 47, 0.05);
-  color: #08162f;
-  font-weight: 600;
 }
 
 @keyframes dropdown-slide {
@@ -909,14 +907,14 @@ select {
   }
 
   .product-row__action {
-    min-height: 3.25rem;
+    min-height: auto;
     padding-left: 0;
     border-left: 0;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
   }
 
-  .product-buy-button {
-    min-height: 3.25rem;
+  .paypal-checkout {
+    width: 100%;
   }
 
   .application-card {

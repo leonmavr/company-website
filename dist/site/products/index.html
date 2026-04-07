@@ -87,7 +87,11 @@
                     <li>gesture interaction (no depth nudges).</li>
                   </ul>
                 </div>
-                <div class="product-row__action" aria-hidden="true"></div>
+                <div class="product-row__action">
+                  <button class="product-download-button" type="button" aria-label="Download freemium">
+                    Download
+                  </button>
+                </div>
               </article>
 
               <article class="product-row" id="product-2">
@@ -104,15 +108,19 @@
                     <li>Depth nudges.</li>
                   </ul>
                 </div>
-                <div class="product-row__action">
-                  <button
-                    class="product-buy-button"
-                    type="button"
-                    data-action="show-payment-popup"
-                    aria-label="Open payment popup for the full version"
+                <div class="product-row__action product-row__action--checkout">
+                  <div
+                    class="paypal-checkout"
+                    data-paypal-button
+                    data-product-id="gesleap-full-version"
+                    data-product-name="Gesleap Full version"
+                    data-amount="25.00"
+                    data-currency="USD"
+                    data-quantity="1"
                   >
-                    Buy
-                  </button>
+                    <div class="paypal-button-container" id="paypal-button-container"></div>
+                    <p class="paypal-result-message" id="paypal-result-message" aria-live="polite"></p>
+                  </div>
                 </div>
               </article>
             </div>
@@ -142,6 +150,10 @@
       </footer>
     </div>
 
+    <script
+      src="https://www.paypal.com/sdk/js?client-id=AV14VGCzyCv2CBYheT3K8-vPL1GWClyl1o-KWll6eZ4RKV4OXJYtTHC5QCIEFu1A5XoWYgiQLwW51L9Y&currency=USD&components=buttons"
+      data-sdk-integration-source="developer-studio"
+    ></script>
     <script src="../main.js" defer></script>
   </body>
 </html>
