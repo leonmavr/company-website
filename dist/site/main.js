@@ -184,7 +184,7 @@ function initPaypalCheckout() {
       layout: "vertical",
       color: "gold",
       label: "paypal"
-    },
+    },  
     async createOrder(data, actions) {
       return actions.order.create({
         purchase_units: [
@@ -204,22 +204,34 @@ function initPaypalCheckout() {
     },
     async onApprove(data, actions) {
       try {
-        const orderData = await actions.order.capture();
-        const transaction = orderData?.purchase_units?.[0]?.payments?.captures?.[0]
-          || orderData?.purchase_units?.[0]?.payments?.authorizations?.[0];
-        const transactionId = transaction?.id || data.orderID;
-        const transactionStatus = transaction?.status || "COMPLETED";
+        setPaypalResultMessage(checkoutRoot, "Verifying payment and preparing download...");
 
-        setPaypalResultMessage(
-          checkoutRoot,
-          `Payment completed. Transaction ${transactionStatus}: ${transactionId}`
-        );
-        console.log("PayPal capture result", {
-          orderData,
-          productId,
-          productName,
-          quantity
+        const orderID = data.orderID || data.orderId;
+        const objectKey = checkoutRoot.dataset.downloadKey || productId;
+
+        const resp = await fetch('/verify-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderID, objectKey })
         });
+
+        const result = await resp.json().catch(() => null);
+        if (!resp.ok) {
+          const msg = (result && (result.error || result.details)) || 'server_error';
+          setPaypalResultMessage(checkoutRoot, `Payment verified but download failed: ${msg}`, true);
+          console.error('verify-payment error', result);
+          return;
+        }
+
+        const downloadUrl = result && result.downloadUrl;
+        if (!downloadUrl) {
+          setPaypalResultMessage(checkoutRoot, 'Payment verified but no download URL returned.', true);
+          console.error('no downloadUrl', result);
+          return;
+        }
+
+        // Redirect user to the one-time download link
+        window.location.href = downloadUrl;
       } catch (error) {
         console.error(error);
         setPaypalResultMessage(checkoutRoot, "Sorry, your transaction could not be processed.", true);

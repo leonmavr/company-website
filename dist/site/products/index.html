@@ -11,6 +11,9 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
       referrerpolicy="no-referrer"
     />
+    <script
+      src="https://www.paypal.com/sdk/js?client-id=BAATH2FWdq_VVje7UZr-XF5GWwAi9rDHJy7uj_O5XYA1ixrcCbuUJemZnhAHWd0EhHaYF92uuIar_tCUEo&components=hosted-buttons&disable-funding=venmo&currency=EUR">
+    </script>
   </head>
   <body>
     <div class="app">
@@ -109,18 +112,12 @@
                   </ul>
                 </div>
                 <div class="product-row__action product-row__action--checkout">
-                  <div
-                    class="paypal-checkout"
-                    data-paypal-button
-                    data-product-id="gesleap-full-version"
-                    data-product-name="Gesleap Full version"
-                    data-amount="25.00"
-                    data-currency="USD"
-                    data-quantity="1"
-                  >
-                    <div class="paypal-button-container" id="paypal-button-container"></div>
-                    <p class="paypal-result-message" id="paypal-result-message" aria-live="polite"></p>
-                  </div>
+                  <div id="paypal-container-F5WXBSGK2X8HW"></div>
+                  <script>
+                    paypal.HostedButtons({
+                      hostedButtonId: "F5WXBSGK2X8HW",
+                    }).render("#paypal-container-F5WXBSGK2X8HW");
+                  </script>
                 </div>
               </article>
             </div>
@@ -150,10 +147,6 @@
       </footer>
     </div>
 
-    <script
-      src="https://www.paypal.com/sdk/js?client-id=AT5AAmabOjCMUR49RpTNLIAw1_lIljJUSIQewm4V6W12L-slNb61gl-oFxJTxS7FKRrXGZEOtStADVab&currency=USD&components=buttons"
-      data-sdk-integration-source="developer-studio"
-    ></script>
     <script src="../main.js" defer></script>
   </body>
 </html>
