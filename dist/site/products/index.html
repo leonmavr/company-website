@@ -122,6 +122,39 @@
               </article>
             </div>
           </section>
+
+          <!--
+            Development-only: issues a real licence without taking payment, so
+            the activation flow can be tested end to end. Hidden unless the page
+            is served from localhost, and the server refuses the request unless
+            it was started with TELEMOUSE_ALLOW_SIMULATE=1.
+          -->
+          <section class="simulate-panel" data-simulate-purchase hidden>
+            <h2 class="simulate-panel__title">Test purchase</h2>
+            <p class="simulate-panel__note">
+              Issues a real licence from Keygen without a payment, for testing
+              activation. Visible on localhost only.
+            </p>
+
+            <div class="simulate-panel__controls">
+              <label class="simulate-field">
+                <span>Customer email</span>
+                <input
+                  type="email"
+                  data-simulate-email
+                  value="test@example.com"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+              </label>
+              <button class="simulate-button" type="button" data-simulate-button>
+                Simulate purchase
+              </button>
+            </div>
+
+            <p class="simulate-status" data-simulate-status hidden></p>
+            <div class="simulate-result" data-simulate-result hidden></div>
+          </section>
         </div>
       </main>
 
@@ -148,5 +181,6 @@
     </div>
 
     <script src="../main.js" defer></script>
+    <script src="../simulate-purchase.js" defer></script>
   </body>
 </html>

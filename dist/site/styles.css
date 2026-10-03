@@ -1427,3 +1427,189 @@ body {
   padding-top: 2rem; /* move title a little lower */
 }
 
+
+/* --- Simulated purchase panel (development only) ----------------------------
+   Issues a real licence without payment so activation can be tested end to
+   end. Hidden by default and revealed by simulate-purchase.js only when the
+   page is served from localhost. */
+
+.simulate-panel {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border: 1px dashed rgba(255, 255, 255, 0.22);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.simulate-panel[hidden] {
+  display: none;
+}
+
+.simulate-panel__title {
+  margin: 0 0 0.35rem;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.simulate-panel__note {
+  margin: 0 0 1rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.simulate-panel__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.simulate-field {
+  display: grid;
+  gap: 0.35rem;
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+.simulate-field span {
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.simulate-field input {
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.65rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--text);
+  font: inherit;
+}
+
+.simulate-field input:focus-visible {
+  border-color: rgba(240, 106, 43, 0.62);
+  outline: none;
+}
+
+.simulate-button {
+  min-height: 3.25rem;
+  padding: 0.65rem 1.5rem;
+  border: 1px solid rgba(240, 106, 43, 0.38);
+  background: rgba(240, 106, 43, 0.14);
+  color: var(--text);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.simulate-button:hover:not(:disabled),
+.simulate-button:focus-visible:not(:disabled) {
+  background: rgba(240, 106, 43, 0.24);
+  border-color: rgba(240, 106, 43, 0.62);
+  outline: none;
+}
+
+.simulate-button:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+.simulate-status {
+  margin: 1rem 0 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.simulate-status[data-state="error"] {
+  color: #ff9a8a;
+}
+
+.simulate-result {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.simulate-result[hidden] {
+  display: none;
+}
+
+.simulate-result__heading {
+  margin: 0 0 0.35rem;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8ff0b0;
+}
+
+.simulate-result__note {
+  margin: 0 0 0.85rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.simulate-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.simulate-key code {
+  flex: 1 1 18rem;
+  min-width: 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0.75rem;
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--text);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  overflow-wrap: anywhere;
+}
+
+.simulate-copy {
+  min-height: 2.75rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.simulate-copy:hover,
+.simulate-copy:focus-visible {
+  background: rgba(255, 255, 255, 0.12);
+  outline: none;
+}
+
+.simulate-steps {
+  margin: 1rem 0 0;
+  padding-left: 1.25rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.8;
+}
+
+.simulate-result__meta {
+  margin: 0.85rem 0 0;
+  color: rgba(237, 244, 255, 0.5);
+  font-size: 0.78rem;
+}
