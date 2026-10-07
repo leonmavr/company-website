@@ -132,9 +132,15 @@
           <section class="simulate-panel" data-simulate-purchase hidden>
             <h2 class="simulate-panel__title">Test purchase</h2>
             <p class="simulate-panel__note">
-              Issues a real licence from Keygen without a payment, for testing
-              activation. Visible on localhost only.
+              Issues a licence without taking a payment, for testing the
+              activation flow. The badge below says whether those licences are
+              real or from a local mock. Visible on localhost only.
             </p>
+
+            <!-- Filled in by simulate-purchase.js from GET /health, because a
+                 mock key and a real key look identical and behave identically
+                 against their own server. -->
+            <p class="simulate-mode" data-simulate-mode hidden></p>
 
             <div class="simulate-panel__controls">
               <label class="simulate-field">

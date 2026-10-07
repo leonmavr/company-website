@@ -1467,6 +1467,39 @@ body {
   align-items: flex-end;
 }
 
+/* Mock and real keys are indistinguishable by shape, so say which this is. */
+.simulate-mode {
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 0.55rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.simulate-mode[hidden] {
+  display: none;
+}
+
+.simulate-mode[data-mode="mock"] {
+  border: 1px solid rgba(255, 196, 84, 0.4);
+  background: rgba(255, 196, 84, 0.12);
+  color: #ffc454;
+}
+
+.simulate-mode[data-mode="real"] {
+  border: 1px solid rgba(143, 240, 176, 0.4);
+  background: rgba(143, 240, 176, 0.12);
+  color: #8ff0b0;
+}
+
+.simulate-mode[data-mode="unknown"] {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--muted);
+}
+
 .simulate-field {
   display: grid;
   gap: 0.35rem;

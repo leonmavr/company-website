@@ -43,6 +43,8 @@ const SIMULATE = {
   // Emails a key to the customer. In production this is what the storefront
   // calls after payment succeeds; here it is driven by the popup's Send button.
   sendEndpoint: "http://localhost:8787/send-key",
+  // Reports whether issued keys are real or mock.
+  healthEndpoint: "http://localhost:8787/health",
   // How long to wait before giving up on the server.
   timeoutMs: 20000
 };
@@ -57,6 +59,31 @@ function isLocalDevelopment() {
     hostname === "0.0.0.0" ||
     hostname.endsWith(".local")
   );
+}
+
+/**
+ * Ask the server whether the keys it issues are real Keygen licences or ones
+ * invented by a local mock.
+ *
+ * This matters more than it looks. A mock key has exactly the same shape as a
+ * real one and is accepted by the local mock server, so it activates perfectly
+ * during testing while not existing in the Keygen account at all. Without a
+ * clear marker the two are indistinguishable, and the first sign of trouble is
+ * a customer whose key nothing recognises.
+ */
+async function fetchKeygenMode() {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 4000);
+    const response = await fetch(SIMULATE.healthEndpoint, { signal: controller.signal });
+    clearTimeout(timer);
+    if (!response.ok) {
+      return null;
+    }
+    return await response.json();
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -411,6 +438,31 @@ function showIssuedLicense(root, { email, licenseKey, licenseId }, onSend) {
   popup.focus();
 }
 
+/** Show whether the server issues real Keygen licences or mock ones. */
+function renderKeygenMode(root, health) {
+  const badge = root.querySelector("[data-simulate-mode]");
+  if (!badge) {
+    return;
+  }
+
+  if (!health) {
+    badge.textContent = "Licence server not reachable";
+    badge.dataset.mode = "unknown";
+    badge.hidden = false;
+    return;
+  }
+
+  if (health.mode === "mock") {
+    badge.textContent =
+      "MOCK KEYS: these licences do not exist in your Keygen account";
+    badge.dataset.mode = "mock";
+  } else {
+    badge.textContent = "REAL KEYS: these licences are created in Keygen";
+    badge.dataset.mode = "real";
+  }
+  badge.hidden = false;
+}
+
 function initSimulatePanel() {
   const root = document.querySelector("[data-simulate-purchase]");
   if (!root) {
@@ -431,6 +483,9 @@ function initSimulatePanel() {
   if (!button) {
     return;
   }
+
+  // Label the panel with what it actually produces, before anything is clicked.
+  fetchKeygenMode().then((health) => renderKeygenMode(root, health));
 
   button.addEventListener("click", async () => {
     const email = (emailField?.value || "").trim() || "customer@example.com";
