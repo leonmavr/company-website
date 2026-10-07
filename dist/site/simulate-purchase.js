@@ -43,8 +43,11 @@ const SIMULATE = {
   // Emails a key to the customer. In production this is what the storefront
   // calls after payment succeeds; here it is driven by the popup's Send button.
   sendEndpoint: "http://localhost:8787/send-key",
-  // Reports whether issued keys are real or mock.
+  // Reports whether issued keys are real or mock, and where the app is hosted.
   healthEndpoint: "http://localhost:8787/health",
+  // Used only when the server does not report a download URL.
+  fallbackDownloadUrl:
+    "https://pub-50b544353f914584bfcea0ea99d78da1.r2.dev/Gesleap-linux-x64.zip",
   // How long to wait before giving up on the server.
   timeoutMs: 20000
 };
@@ -153,6 +156,29 @@ function setSimulateStatus(root, message, state = "info") {
   status.hidden = !message;
 }
 
+/** An inline SVG download arrow, matching the key icon. */
+function downloadIcon() {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("width", "18");
+  svg.setAttribute("height", "18");
+  svg.setAttribute("aria-hidden", "true");
+  svg.setAttribute("focusable", "false");
+  svg.classList.add("key-dialog__icon");
+
+  // Arrow into a tray.
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("fill", "none");
+  path.setAttribute("stroke", "currentColor");
+  path.setAttribute("stroke-width", "1.6");
+  path.setAttribute("stroke-linecap", "round");
+  path.setAttribute("stroke-linejoin", "round");
+  path.setAttribute("d", "M12 3v11m0 0l-4-4m4 4l4-4M4 17v2.5h16V17");
+  svg.append(path);
+
+  return svg;
+}
+
 /** An inline SVG key, so the popup needs no font or image dependency. */
 function keyIcon() {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -216,7 +242,7 @@ async function copyText(text) {
 }
 
 /** Build the popup shown once a licence has been issued. */
-function createKeyDialog({ licenseKey, onSend }) {
+function createKeyDialog({ licenseKey, downloadUrl, onSend }) {
   const overlay = document.createElement("div");
   overlay.className = "key-overlay";
 
@@ -258,6 +284,30 @@ function createKeyDialog({ licenseKey, onSend }) {
 
   keyRow.append(keyIcon(), keyValue, copyButton);
 
+  // --- download row:  [download icon] [url (clickable)] [Copy] --------------
+  // The key is useless without the app, so the download is presented right
+  // beside it rather than being something the customer has to go and find. The
+  // link is clickable and the URL is also copyable, because a customer may be
+  // reading this on one machine and installing on another.
+  const downloadRow = document.createElement("div");
+  downloadRow.className = "key-dialog__row key-dialog__row--download";
+
+  const downloadCopy = document.createElement("button");
+  downloadCopy.type = "button";
+  downloadCopy.className = "key-dialog__copy";
+  downloadCopy.textContent = "Copy";
+
+  const downloadLink = document.createElement("a");
+  downloadLink.className = "key-dialog__download";
+  downloadLink.href = downloadUrl;
+  downloadLink.textContent = downloadUrl;
+  // A download, not a page to navigate to.
+  downloadLink.setAttribute("download", "");
+  downloadLink.setAttribute("rel", "noopener");
+  downloadLink.title = downloadUrl;
+
+  downloadRow.append(downloadIcon(), downloadLink, downloadCopy);
+
   // --- "Key copied to clipboard." ------------------------------------------
   const toast = document.createElement("p");
   toast.className = "key-dialog__toast";
@@ -285,7 +335,7 @@ function createKeyDialog({ licenseKey, onSend }) {
 
   sendRow.append(emailField, sendButton);
 
-  dialog.append(header, keyRow, toast, sendRow);
+  dialog.append(header, keyRow, downloadRow, toast, sendRow);
   overlay.append(dialog);
 
   // --- behaviour ------------------------------------------------------------
@@ -305,20 +355,26 @@ function createKeyDialog({ licenseKey, onSend }) {
     }, 2400);
   }
 
-  copyButton.addEventListener("click", async () => {
-    const copied = await copyText(licenseKey);
-    if (copied) {
-      copyButton.textContent = "Copied";
-      copyButton.classList.add("is-done");
-      setTimeout(() => {
-        copyButton.textContent = "Copy";
-        copyButton.classList.remove("is-done");
-      }, 1500);
-      showToast("Key copied to clipboard.");
-    } else {
-      showToast("Could not copy automatically. Select the key and copy it.", "error");
-    }
-  });
+  /** Same feedback pattern as the key button, so the two behave alike. */
+  function wireCopyButton(button, value, label, message) {
+    button.addEventListener("click", async () => {
+      const copied = await copyText(value);
+      if (copied) {
+        button.textContent = "Copied";
+        button.classList.add("is-done");
+        setTimeout(() => {
+          button.textContent = label;
+          button.classList.remove("is-done");
+        }, 1500);
+        showToast(message);
+      } else {
+        showToast(`Could not copy the ${message}. Select it and copy manually.`, "error");
+      }
+    });
+  }
+
+  wireCopyButton(copyButton, licenseKey, "Copy", "Key copied to clipboard.");
+  wireCopyButton(downloadCopy, downloadUrl, "Copy", "Download link copied to clipboard.");
 
   async function submitSend() {
     const email = emailField.value.trim();
@@ -383,7 +439,7 @@ function createKeyDialog({ licenseKey, onSend }) {
 }
 
 /** Replace the panel body with a summary and open the key popup. */
-function showIssuedLicense(root, { email, licenseKey, licenseId, simulated }, onSend) {
+function showIssuedLicense(root, { email, licenseKey, licenseId, simulated }, onSend, downloadUrl) {
   const result = root.querySelector("[data-simulate-result]");
   if (!result) {
     return;
@@ -423,7 +479,7 @@ function showIssuedLicense(root, { email, licenseKey, licenseId, simulated }, on
   reopenButton.className = "simulate-copy";
   reopenButton.textContent = "Show popup";
   reopenButton.addEventListener("click", () => {
-    const popup = createKeyDialog({ licenseKey, onSend });
+    const popup = createKeyDialog({ licenseKey, downloadUrl, onSend });
     document.body.append(popup.overlay);
     popup.focus();
   });
@@ -438,7 +494,7 @@ function showIssuedLicense(root, { email, licenseKey, licenseId, simulated }, on
   result.hidden = false;
 
   // Open the popup immediately: that is the point of the button.
-  const popup = createKeyDialog({ licenseKey, onSend });
+  const popup = createKeyDialog({ licenseKey, downloadUrl, onSend });
   document.body.append(popup.overlay);
   popup.focus();
 }
@@ -467,7 +523,6 @@ function renderKeygenMode(root, health) {
   }
   badge.hidden = false;
 }
-
 function initSimulatePanel() {
   const root = document.querySelector("[data-simulate-purchase]");
   if (!root) {
@@ -489,8 +544,19 @@ function initSimulatePanel() {
     return;
   }
 
-  // Label the panel with what it actually produces, before anything is clicked.
-  fetchKeygenMode().then((health) => renderKeygenMode(root, health));
+  // Where the customer downloads the app. The server owns this value so the
+  // email and the popup cannot disagree; the fallback covers the case where the
+  // health check has not answered yet or the server is older than this page.
+  let downloadUrl = SIMULATE.fallbackDownloadUrl;
+
+  // Label the panel with what it actually produces, before anything is clicked,
+  // and take the download URL from the server while we are there.
+  fetchKeygenMode().then((health) => {
+    renderKeygenMode(root, health);
+    if (health && health.downloadUrl) {
+      downloadUrl = health.downloadUrl;
+    }
+  });
 
   button.addEventListener("click", async () => {
     const email = (emailField?.value || "").trim() || "customer@example.com";
@@ -503,7 +569,12 @@ function initSimulatePanel() {
     try {
       const issued = await requestSimulatedLicense(email);
       setSimulateStatus(root, "");
-      showIssuedLicense(root, issued, (toEmail) => requestKeyEmail(toEmail, issued.licenseKey));
+      showIssuedLicense(
+        root,
+        issued,
+        (toEmail) => requestKeyEmail(toEmail, issued.licenseKey),
+        downloadUrl
+      );
     } catch (error) {
       setSimulateStatus(root, describeError(error), "error");
     } finally {

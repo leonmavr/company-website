@@ -1755,6 +1755,36 @@ body {
   user-select: all; /* one click selects the whole key */
 }
 
+/* The download sits directly under the key, because the key is useless
+   without the app. */
+.key-dialog__row--download {
+  margin-top: 0.6rem;
+}
+
+.key-dialog__download {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 0.7rem;
+  background: rgba(0, 0, 0, 0.24);
+  color: #9fc4ff;
+  font-size: 0.78rem;
+  text-decoration: none;
+  /* Long URLs must not stretch the dialog; wrap them and keep the row intact. */
+  overflow-wrap: anywhere;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.key-dialog__download:hover,
+.key-dialog__download:focus-visible {
+  border-color: rgba(159, 196, 255, 0.5);
+  background: rgba(159, 196, 255, 0.12);
+  color: #cfe0ff;
+  text-decoration: underline;
+  outline: none;
+}
+
 .key-dialog__copy,
 .key-dialog__send {
   flex: none;
