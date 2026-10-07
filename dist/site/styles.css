@@ -1613,3 +1613,222 @@ body {
   color: rgba(237, 244, 255, 0.5);
   font-size: 0.78rem;
 }
+
+/* --- Licence key popup ------------------------------------------------------
+   Shown immediately after a licence is issued, so the key can be copied or
+   emailed without hunting for it in the panel. Fixed overlay, centred, with the
+   key row first because that is the thing the customer came for. */
+
+.key-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60; /* above the contact modal, which sits at 40 */
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(4, 11, 24, 0.78);
+  animation: key-fade-in 140ms ease-out;
+}
+
+.key-dialog {
+  width: min(32rem, 100%);
+  padding: 1.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 1rem;
+  background: #0d1b36;
+  box-shadow: var(--shadow);
+  color: var(--text);
+  animation: key-rise 160ms ease-out;
+}
+
+@keyframes key-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes key-rise {
+  from { opacity: 0; transform: translateY(0.5rem); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Respect a reduced-motion preference rather than animating regardless. */
+@media (prefers-reduced-motion: reduce) {
+  .key-overlay,
+  .key-dialog {
+    animation: none;
+  }
+}
+
+.key-dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.key-dialog__title {
+  margin: 0;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.key-dialog__close {
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.key-dialog__close:hover,
+.key-dialog__close:focus-visible {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  outline: none;
+}
+
+.key-dialog__row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.key-dialog__icon {
+  flex: none;
+  color: var(--accent);
+}
+
+.key-dialog__value {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 0.7rem;
+  background: rgba(0, 0, 0, 0.34);
+  color: var(--text);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 0.92rem;
+  letter-spacing: 0.04em;
+  overflow-wrap: anywhere;
+  user-select: all; /* one click selects the whole key */
+}
+
+.key-dialog__copy,
+.key-dialog__send {
+  flex: none;
+  min-height: 2.6rem;
+  padding: 0.55rem 1.1rem;
+  border-radius: 999px;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.key-dialog__copy {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+}
+
+.key-dialog__copy:hover,
+.key-dialog__copy:focus-visible {
+  background: rgba(255, 255, 255, 0.14);
+  outline: none;
+}
+
+.key-dialog__copy.is-done {
+  border-color: rgba(143, 240, 176, 0.5);
+  background: rgba(143, 240, 176, 0.16);
+  color: #8ff0b0;
+}
+
+/* The toast keeps its line height at all times so the dialog does not jump
+   when the message appears or fades. */
+.key-dialog__toast {
+  margin: 0.55rem 0 0;
+  min-height: 1.15rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.key-dialog__toast.is-visible {
+  opacity: 1;
+}
+
+.key-dialog__toast[data-state="error"] {
+  color: #ff9a8a;
+}
+
+.key-dialog__row--send {
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.key-dialog__email {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 2.6rem;
+  padding: 0.55rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.28);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.key-dialog__email::placeholder {
+  color: rgba(237, 244, 255, 0.38);
+}
+
+.key-dialog__email:focus-visible {
+  border-color: rgba(240, 106, 43, 0.62);
+  outline: none;
+}
+
+.key-dialog__send {
+  border: 1px solid rgba(240, 106, 43, 0.4);
+  background: rgba(240, 106, 43, 0.16);
+  color: var(--text);
+}
+
+.key-dialog__send:hover:not(:disabled),
+.key-dialog__send:focus-visible:not(:disabled) {
+  background: rgba(240, 106, 43, 0.28);
+  border-color: rgba(240, 106, 43, 0.66);
+  outline: none;
+}
+
+.key-dialog__send:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+@media (max-width: 30rem) {
+  /* Stack on a narrow screen so the key keeps a readable width. */
+  .key-dialog__row--send {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .key-dialog__email,
+  .key-dialog__send {
+    width: 100%;
+  }
+}
