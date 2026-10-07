@@ -383,7 +383,7 @@ function createKeyDialog({ licenseKey, onSend }) {
 }
 
 /** Replace the panel body with a summary and open the key popup. */
-function showIssuedLicense(root, { email, licenseKey, licenseId }, onSend) {
+function showIssuedLicense(root, { email, licenseKey, licenseId, simulated }, onSend) {
   const result = root.querySelector("[data-simulate-result]");
   if (!result) {
     return;
@@ -398,10 +398,15 @@ function showIssuedLicense(root, { email, licenseKey, licenseId }, onSend) {
 
   const explain = document.createElement("p");
   explain.className = "simulate-result__note";
-  explain.textContent =
-    "This is a real Keygen licence. Copy the key from the popup and paste it " +
-    "into TeleMouse to activate it, exactly as a customer would after " +
-    "receiving the email.";
+  // Say where the key actually lives. A simulated licence is not in the Keygen
+  // account, and calling it "real" is how one gets mistaken for a live key.
+  explain.textContent = simulated
+    ? "Issued by the local mock, so this key does NOT exist in your Keygen " +
+      "account. It activates against the mock only, which is enough to test " +
+      "the flow but is not a sale."
+    : "This is a real Keygen licence. Copy the key from the popup and paste it " +
+      "into TeleMouse to activate it, exactly as a customer would after " +
+      "receiving the email.";
   result.append(explain);
 
   // Keep the key available in the panel as well as the popup, so it can still
