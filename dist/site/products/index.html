@@ -11,9 +11,23 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
       referrerpolicy="no-referrer"
     />
-    <script
-      src="https://www.paypal.com/sdk/js?client-id=BAATH2FWdq_VVje7UZr-XF5GWwAi9rDHJy7uj_O5XYA1ixrcCbuUJemZnhAHWd0EhHaYF92uuIar_tCUEo&components=hosted-buttons&disable-funding=venmo&currency=EUR">
-    </script>
+    <!--
+      The PayPal SDK is deliberately not loaded here any more. It is fetched at
+      runtime from the licence server's /public-config instead, so the client
+      id, the currency and the sandbox-or-live choice all come from the same
+      place that actually takes the money, rather than being copied into this
+      file where they can quietly go stale.
+
+      The previous script tag here also loaded the hosted-buttons component at
+      a EUR price, which is what made the broken Buy button on this page.
+    -->
+
+    <!--
+      Optional. Points the page at a licence server other than the built-in
+      default, without editing any JavaScript — useful for staging, or for a
+      server running elsewhere on the local network.
+    -->
+    <!-- <meta name="gesleap-license-server" content="https://licence.example.com" /> -->
   </head>
   <body>
     <div class="app">
@@ -111,13 +125,47 @@
                     <li>Depth nudges.</li>
                   </ul>
                 </div>
-                <div class="product-row__action product-row__action--checkout">
-                  <div id="paypal-container-F5WXBSGK2X8HW"></div>
-                  <script>
-                    paypal.HostedButtons({
-                      hostedButtonId: "F5WXBSGK2X8HW",
-                    }).render("#paypal-container-F5WXBSGK2X8HW");
-                  </script>
+                <div
+                  class="product-row__action product-row__action--checkout"
+                  data-checkout
+                >
+                  <!--
+                    Which build to download. The visitor's system is detected
+                    and pre-selected, but shown rather than assumed: a wrong
+                    guess then costs one click instead of a wrong download. The
+                    hint underneath says it was detected, so a correct guess is
+                    not mistaken for a question that needs answering.
+                  -->
+                  <fieldset class="os-picker">
+                    <legend class="os-picker__legend">Your system</legend>
+
+                    <label class="os-option">
+                      <input type="radio" name="platform" value="linux" data-os-option />
+                      <span class="os-option__name">Ubuntu / Linux</span>
+                    </label>
+
+                    <label class="os-option">
+                      <input type="radio" name="platform" value="windows" data-os-option />
+                      <span class="os-option__name">Windows</span>
+                    </label>
+                  </fieldset>
+
+                  <p class="os-picker__hint" data-os-hint></p>
+
+                  <!-- Both filled in from the licence server's /public-config.
+                       The price is not written here because a price in the page
+                       is a price the buyer can change. -->
+                  <p class="checkout-price" data-checkout-price-row hidden>
+                    <span class="checkout-price__label">One-time payment</span>
+                    <strong class="checkout-price__value" data-checkout-price></strong>
+                  </p>
+
+                  <div class="checkout-buttons" data-paypal-buttons></div>
+
+                  <p class="checkout-status" data-checkout-status hidden></p>
+
+                  <!-- Only appears when the chosen build is not published yet. -->
+                  <p class="checkout-note" data-platform-note hidden></p>
                 </div>
               </article>
             </div>
@@ -187,6 +235,15 @@
     </div>
 
     <script src="../main.js" defer></script>
+
+    <!--
+      Order matters. key-dialog.js defines the popup that both of the others
+      show, and checkout.js defines where the licence server is, which
+      simulate-purchase.js derives its endpoints from. With `defer` these run in
+      document order, so each is defined before the file that uses it.
+    -->
+    <script src="../key-dialog.js" defer></script>
+    <script src="../checkout.js" defer></script>
     <script src="../simulate-purchase.js" defer></script>
   </body>
 </html>

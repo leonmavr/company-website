@@ -37,32 +37,24 @@
  * production flow relies on.
  */
 
+// Where the licence server lives is defined once, in checkout.js, which is
+// loaded before this file. Deriving from it rather than repeating the address
+// means the test panel and the real checkout cannot end up pointed at different
+// servers, which is the kind of mistake that makes a passing test meaningless.
 const SIMULATE = {
-  // Where the licence server is listening during development.
-  endpoint: "http://localhost:8787/simulate",
+  // Issues a licence without taking a payment.
+  endpoint: `${licenseServerBase()}/simulate`,
   // Emails a key to the customer. In production this is what the storefront
   // calls after payment succeeds; here it is driven by the popup's Send button.
-  sendEndpoint: "http://localhost:8787/send-key",
+  sendEndpoint: `${licenseServerBase()}/send-key`,
   // Reports whether issued keys are real or mock, and where the app is hosted.
-  healthEndpoint: "http://localhost:8787/health",
+  healthEndpoint: `${licenseServerBase()}/health`,
   // Used only when the server does not report a download URL.
   fallbackDownloadUrl:
     "https://pub-50b544353f914584bfcea0ea99d78da1.r2.dev/Gesleap-linux-x64.zip",
   // How long to wait before giving up on the server.
   timeoutMs: 20000
 };
-
-/** True when this page is being served locally rather than from the live site. */
-function isLocalDevelopment() {
-  const { hostname, protocol } = window.location;
-  return (
-    protocol === "file:" ||
-    hostname === "localhost" ||
-    hostname === "127.0.0.1" ||
-    hostname === "0.0.0.0" ||
-    hostname.endsWith(".local")
-  );
-}
 
 /**
  * Ask the server whether the keys it issues are real Keygen licences or ones
@@ -156,287 +148,9 @@ function setSimulateStatus(root, message, state = "info") {
   status.hidden = !message;
 }
 
-/** An inline SVG download arrow, matching the key icon. */
-function downloadIcon() {
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox", "0 0 24 24");
-  svg.setAttribute("width", "18");
-  svg.setAttribute("height", "18");
-  svg.setAttribute("aria-hidden", "true");
-  svg.setAttribute("focusable", "false");
-  svg.classList.add("key-dialog__icon");
-
-  // Arrow into a tray.
-  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  path.setAttribute("fill", "none");
-  path.setAttribute("stroke", "currentColor");
-  path.setAttribute("stroke-width", "1.6");
-  path.setAttribute("stroke-linecap", "round");
-  path.setAttribute("stroke-linejoin", "round");
-  path.setAttribute("d", "M12 3v11m0 0l-4-4m4 4l4-4M4 17v2.5h16V17");
-  svg.append(path);
-
-  return svg;
-}
-
-/** An inline SVG key, so the popup needs no font or image dependency. */
-function keyIcon() {
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox", "0 0 24 24");
-  svg.setAttribute("width", "18");
-  svg.setAttribute("height", "18");
-  svg.setAttribute("aria-hidden", "true");
-  svg.setAttribute("focusable", "false");
-  svg.classList.add("key-dialog__icon");
-
-  // A shaft with a bow (the round handle) and two teeth.
-  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  path.setAttribute("fill", "none");
-  path.setAttribute("stroke", "currentColor");
-  path.setAttribute("stroke-width", "1.6");
-  path.setAttribute("stroke-linecap", "round");
-  path.setAttribute("stroke-linejoin", "round");
-  path.setAttribute(
-    "d",
-    "M15.5 8.5a3.5 3.5 0 1 0-3.4 3.5L11 13H9v2H7v2H4v-3l7.1-7.1"
-  );
-  svg.append(path);
-
-  return svg;
-}
-
-/**
- * Copy text to the clipboard.
- *
- * navigator.clipboard needs a secure context, which covers localhost but not a
- * plain-http page on a LAN address. The textarea fallback keeps the button
- * working there, and is invisible either way.
- */
-async function copyText(text) {
-  if (navigator.clipboard && window.isSecureContext) {
-    try {
-      await navigator.clipboard.writeText(text);
-      return true;
-    } catch {
-      // Fall through to the legacy path below.
-    }
-  }
-
-  const scratch = document.createElement("textarea");
-  scratch.value = text;
-  scratch.setAttribute("readonly", "");
-  scratch.style.position = "fixed";
-  scratch.style.top = "-1000px";
-  scratch.style.opacity = "0";
-  document.body.append(scratch);
-  scratch.select();
-
-  let ok = false;
-  try {
-    ok = document.execCommand("copy");
-  } catch {
-    ok = false;
-  }
-  scratch.remove();
-  return ok;
-}
-
-/** Build the popup shown once a licence has been issued. */
-function createKeyDialog({ licenseKey, downloadUrl, onSend }) {
-  const overlay = document.createElement("div");
-  overlay.className = "key-overlay";
-
-  const dialog = document.createElement("div");
-  dialog.className = "key-dialog";
-  dialog.setAttribute("role", "dialog");
-  dialog.setAttribute("aria-modal", "true");
-  dialog.setAttribute("aria-labelledby", "key-dialog-title");
-
-  // --- header ---------------------------------------------------------------
-  const header = document.createElement("div");
-  header.className = "key-dialog__header";
-
-  const title = document.createElement("h2");
-  title.className = "key-dialog__title";
-  title.id = "key-dialog-title";
-  title.textContent = "Your licence key";
-
-  const closeButton = document.createElement("button");
-  closeButton.type = "button";
-  closeButton.className = "key-dialog__close";
-  closeButton.setAttribute("aria-label", "Close");
-  closeButton.textContent = "✕";
-
-  header.append(title, closeButton);
-
-  // --- key row:  [key icon] [key] [Copy] ------------------------------------
-  const keyRow = document.createElement("div");
-  keyRow.className = "key-dialog__row";
-
-  const copyButton = document.createElement("button");
-  copyButton.type = "button";
-  copyButton.className = "key-dialog__copy";
-  copyButton.textContent = "Copy";
-
-  const keyValue = document.createElement("code");
-  keyValue.className = "key-dialog__value";
-  keyValue.textContent = licenseKey;
-
-  keyRow.append(keyIcon(), keyValue, copyButton);
-
-  // --- download row:  [download icon] [url (clickable)] [Copy] --------------
-  // The key is useless without the app, so the download is presented right
-  // beside it rather than being something the customer has to go and find. The
-  // link is clickable and the URL is also copyable, because a customer may be
-  // reading this on one machine and installing on another.
-  const downloadRow = document.createElement("div");
-  downloadRow.className = "key-dialog__row key-dialog__row--download";
-
-  const downloadCopy = document.createElement("button");
-  downloadCopy.type = "button";
-  downloadCopy.className = "key-dialog__copy";
-  downloadCopy.textContent = "Copy";
-
-  const downloadLink = document.createElement("a");
-  downloadLink.className = "key-dialog__download";
-  downloadLink.href = downloadUrl;
-  downloadLink.textContent = downloadUrl;
-  // A download, not a page to navigate to.
-  downloadLink.setAttribute("download", "");
-  downloadLink.setAttribute("rel", "noopener");
-  downloadLink.title = downloadUrl;
-
-  downloadRow.append(downloadIcon(), downloadLink, downloadCopy);
-
-  // --- "Key copied to clipboard." ------------------------------------------
-  const toast = document.createElement("p");
-  toast.className = "key-dialog__toast";
-  toast.setAttribute("role", "status");
-  // Reserve the space and fade the text, rather than toggling display, so the
-  // dialog does not jump when the message appears.
-  toast.setAttribute("aria-live", "polite");
-
-  // --- email row:  [email field] [Send] ------------------------------------
-  const sendRow = document.createElement("div");
-  sendRow.className = "key-dialog__row key-dialog__row--send";
-
-  const emailField = document.createElement("input");
-  emailField.type = "email";
-  emailField.className = "key-dialog__email";
-  emailField.placeholder = "you@example.com";
-  emailField.setAttribute("aria-label", "Email address");
-  emailField.autocomplete = "off";
-  emailField.spellcheck = false;
-
-  const sendButton = document.createElement("button");
-  sendButton.type = "button";
-  sendButton.className = "key-dialog__send";
-  sendButton.textContent = "Send";
-
-  sendRow.append(emailField, sendButton);
-
-  dialog.append(header, keyRow, downloadRow, toast, sendRow);
-  overlay.append(dialog);
-
-  // --- behaviour ------------------------------------------------------------
-
-  let toastTimer = null;
-  function showToast(message, state = "info") {
-    toast.textContent = message;
-    toast.dataset.state = state;
-    toast.classList.add("is-visible");
-
-    if (toastTimer) {
-      clearTimeout(toastTimer);
-    }
-    toastTimer = setTimeout(() => {
-      toast.classList.remove("is-visible");
-      toastTimer = null;
-    }, 2400);
-  }
-
-  /** Same feedback pattern as the key button, so the two behave alike. */
-  function wireCopyButton(button, value, label, message) {
-    button.addEventListener("click", async () => {
-      const copied = await copyText(value);
-      if (copied) {
-        button.textContent = "Copied";
-        button.classList.add("is-done");
-        setTimeout(() => {
-          button.textContent = label;
-          button.classList.remove("is-done");
-        }, 1500);
-        showToast(message);
-      } else {
-        showToast(`Could not copy the ${message}. Select it and copy manually.`, "error");
-      }
-    });
-  }
-
-  wireCopyButton(copyButton, licenseKey, "Copy", "Key copied to clipboard.");
-  wireCopyButton(downloadCopy, downloadUrl, "Copy", "Download link copied to clipboard.");
-
-  async function submitSend() {
-    const email = emailField.value.trim();
-
-    if (!email || !email.includes("@")) {
-      showToast("Enter an email address to send the key to.", "error");
-      emailField.focus();
-      return;
-    }
-
-    sendButton.disabled = true;
-    const originalLabel = sendButton.textContent;
-    sendButton.textContent = "Sending…";
-
-    try {
-      await onSend(email);
-      sendButton.textContent = "Sent";
-      showToast(`Key sent to ${email}.`);
-      setTimeout(() => {
-        sendButton.textContent = originalLabel;
-      }, 1500);
-    } catch (error) {
-      sendButton.textContent = originalLabel;
-      showToast(error.message || "Could not send the email.", "error");
-    } finally {
-      sendButton.disabled = false;
-    }
-  }
-
-  sendButton.addEventListener("click", submitSend);
-  // Enter in the email field should do the obvious thing.
-  emailField.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      submitSend();
-    }
-  });
-
-  function remove() {
-    if (toastTimer) {
-      clearTimeout(toastTimer);
-    }
-    document.removeEventListener("keydown", onKeyDown);
-    overlay.remove();
-  }
-
-  function onKeyDown(event) {
-    if (event.key === "Escape") {
-      remove();
-    }
-  }
-
-  document.addEventListener("keydown", onKeyDown);
-  closeButton.addEventListener("click", remove);
-  overlay.addEventListener("click", (event) => {
-    if (event.target === overlay) {
-      remove();
-    }
-  });
-
-  return { overlay, remove, focus: () => emailField.focus() };
-}
+// The key popup itself lives in key-dialog.js, which is loaded before this
+// file. Sharing it means the test panel and the real checkout show a buyer the
+// same thing, so what gets rehearsed here is what a customer actually sees.
 
 /** Replace the panel body with a summary and open the key popup. */
 function showIssuedLicense(root, { email, licenseKey, licenseId, simulated }, onSend, downloadUrl) {

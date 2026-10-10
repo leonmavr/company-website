@@ -374,15 +374,145 @@ select {
   border-left: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+/*
+ * The Full version's buy column: which system, what it costs, and the payment
+ * button.
+ *
+ * A single vertical column rather than the flex row the other product rows use,
+ * because these pieces are read in order -- pick your system, see the price,
+ * pay. Laid out as a row they would sit side by side and read as three
+ * unrelated things.
+ */
 .product-row__action--checkout {
-  align-items: stretch;
-}
-
-.paypal-checkout {
   display: grid;
   align-content: center;
-  gap: 0.75rem;
-  width: min(100%, 36rem);
+  justify-items: stretch;
+  gap: 0.7rem;
+  width: min(100%, 24rem);
+  margin-inline: auto;
+}
+
+.os-picker {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.os-picker__legend {
+  padding: 0;
+  margin-bottom: 0.15rem;
+  color: var(--muted);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.os-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.6rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 140ms ease, background-color 140ms ease,
+    color 140ms ease;
+}
+
+.os-option:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* :has() highlights the chosen option without any JavaScript tracking which
+   one is selected, so the two can never disagree. */
+.os-option:has(input:checked) {
+  border-color: rgba(240, 106, 43, 0.5);
+  background: rgba(240, 106, 43, 0.12);
+  color: var(--text);
+}
+
+.os-option input {
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.os-option:focus-within {
+  outline: 2px solid rgba(240, 106, 43, 0.55);
+  outline-offset: 2px;
+}
+
+.os-option__name {
+  font-weight: 600;
+}
+
+/*
+ * Deliberately small and low-contrast: it reports a guess about the visitor's
+ * machine, and a guess should not compete with the price for attention.
+ */
+.os-picker__hint {
+  margin: 0;
+  color: rgba(237, 244, 255, 0.5);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.checkout-price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0.15rem 0 0;
+}
+
+.checkout-price__label {
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.checkout-price__value {
+  color: var(--text);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.checkout-buttons {
+  width: 100%;
+}
+
+.checkout-status,
+.checkout-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+/* Reserve the space only once there is something to say, so the button does not
+   jump down the page at the moment a status appears. */
+.checkout-status:not([hidden]) {
+  min-height: 2.4rem;
+}
+
+.checkout-status[data-state="error"] {
+  color: #ffb7a3;
+}
+
+/* Says the chosen build is not published yet. Warmer than the muted text,
+   because it is the one line here that a buyer may need to act on. */
+.checkout-note:not([hidden]) {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid rgba(240, 106, 43, 0.28);
+  border-radius: 0.6rem;
+  background: rgba(240, 106, 43, 0.08);
+  color: #ffd2bb;
 }
 
 .product-download-button {
@@ -409,21 +539,9 @@ select {
   outline: none;
 }
 
-.paypal-button-container {
-  width: 100%;
-}
-
-.paypal-result-message {
-  margin: 0;
-  min-height: 2.6rem;
-  color: var(--muted);
-  font-size: 0.9rem;
-  line-height: 1.45;
-}
-
-.paypal-result-message.is-error {
-  color: #ffb7a3;
-}
+/* .paypal-checkout, .paypal-button-container and .paypal-result-message were
+   removed with the dead hosted-button markup they styled. Nothing in the site
+   referenced them: the element main.js looked for never existed in the HTML. */
 
 .applications-top-grid,
 .applications-bottom-grid {
@@ -913,7 +1031,8 @@ select {
     border-top: 1px solid rgba(255, 255, 255, 0.08);
   }
 
-  .paypal-checkout {
+  .paypal-checkout,
+  .product-row__action--checkout {
     width: 100%;
   }
 
@@ -1729,6 +1848,19 @@ body {
   outline: none;
 }
 
+/*
+ * A line under the heading, e.g. "We have emailed this key to you@example.com."
+ *
+ * Why the key is on this screen at all matters to a buyer who has just paid:
+ * it tells them the key is also in their inbox, so closing this window is safe.
+ */
+.key-dialog__note {
+  margin: -0.4rem 0 0.9rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
 .key-dialog__row {
   display: flex;
   align-items: center;
@@ -1783,6 +1915,19 @@ body {
   color: #cfe0ff;
   text-decoration: underline;
   outline: none;
+}
+
+/*
+ * The same box, for a platform whose build is not published yet.
+ *
+ * It keeps the shape of the download row so the popup looks the same either
+ * way, but drops the link styling: there is nothing here to click, and making
+ * it look clickable would be the bug.
+ */
+.key-dialog__download--pending {
+  color: var(--muted);
+  font-style: italic;
+  cursor: default;
 }
 
 .key-dialog__copy,

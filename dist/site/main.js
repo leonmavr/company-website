@@ -146,114 +146,17 @@ function showEmailModal(email) {
   document.addEventListener("keydown", onKeyDown);
 }
 
-function setPaypalResultMessage(container, message, isError = false) {
-  const resultNode = container.querySelector("#paypal-result-message");
-  if (!resultNode) {
-    return;
-  }
-
-  resultNode.textContent = message;
-  resultNode.classList.toggle("is-error", isError);
-}
-
-function initPaypalCheckout() {
-  const checkoutRoot = document.querySelector("[data-paypal-button]");
-  if (!checkoutRoot) {
-    return;
-  }
-
-  const buttonContainer = checkoutRoot.querySelector("#paypal-button-container");
-  if (!buttonContainer) {
-    return;
-  }
-
-  if (!window.paypal || typeof window.paypal.Buttons !== "function") {
-    setPaypalResultMessage(checkoutRoot, "PayPal checkout is unavailable right now. Please try again later.", true);
-    return;
-  }
-
-  const productId = checkoutRoot.dataset.productId || "gesleap-full-version";
-  const productName = checkoutRoot.dataset.productName || "Gesleap Full version";
-  const amount = checkoutRoot.dataset.amount || "25.00";
-  const currency = checkoutRoot.dataset.currency || "USD";
-  const quantity = checkoutRoot.dataset.quantity || "1";
-
-  const paypalButtons = window.paypal.Buttons({
-    style: {
-      shape: "rect",
-      layout: "vertical",
-      color: "gold",
-      label: "paypal"
-    },  
-    async createOrder(data, actions) {
-      return actions.order.create({
-        purchase_units: [
-          {
-            custom_id: productId,
-            description: productName,
-            amount: {
-              currency_code: currency,
-              value: amount
-            }
-          }
-        ],
-        application_context: {
-          shipping_preference: "NO_SHIPPING"
-        }
-      });
-    },
-    async onApprove(data, actions) {
-      try {
-        setPaypalResultMessage(checkoutRoot, "Verifying payment and preparing download...");
-
-        const orderID = data.orderID || data.orderId;
-        const objectKey = checkoutRoot.dataset.downloadKey || productId;
-
-        const resp = await fetch('/verify-payment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderID, objectKey })
-        });
-
-        const result = await resp.json().catch(() => null);
-        if (!resp.ok) {
-          const msg = (result && (result.error || result.details)) || 'server_error';
-          setPaypalResultMessage(checkoutRoot, `Payment verified but download failed: ${msg}`, true);
-          console.error('verify-payment error', result);
-          return;
-        }
-
-        const downloadUrl = result && result.downloadUrl;
-        if (!downloadUrl) {
-          setPaypalResultMessage(checkoutRoot, 'Payment verified but no download URL returned.', true);
-          console.error('no downloadUrl', result);
-          return;
-        }
-
-        // Redirect user to the one-time download link
-        window.location.href = downloadUrl;
-      } catch (error) {
-        console.error(error);
-        setPaypalResultMessage(checkoutRoot, "Sorry, your transaction could not be processed.", true);
-      }
-    },
-    onError(error) {
-      console.error(error);
-      setPaypalResultMessage(checkoutRoot, "Sorry, your transaction could not be processed.", true);
-    }
-  });
-
-  if (typeof paypalButtons.isEligible === "function" && !paypalButtons.isEligible()) {
-    setPaypalResultMessage(checkoutRoot, "PayPal checkout is not available for this browser or device.", true);
-    return;
-  }
-
-  paypalButtons.render(buttonContainer).catch((error) => {
-    console.error(error);
-    setPaypalResultMessage(checkoutRoot, "PayPal checkout failed to load. Please refresh and try again.", true);
-  });
-}
+// The PayPal checkout code that used to live here has been removed.
+//
+// It looked for [data-paypal-button] and #paypal-button-container, neither of
+// which appears anywhere in the markup, so it returned on its first line every
+// time and nothing ran. The "Something went wrong" message visitors saw came
+// from the hosted button configured in PayPal's dashboard instead -- a
+// different mechanism entirely, which is why the code here looked innocent.
+//
+// Buying is now in checkout.js: the order is opened server-side so the price
+// cannot be edited by the buyer, and the licence server verifies the payment
+// against PayPal's own records before any key is issued.
 
 hydrateContactInfo();
 hydrateSiteCopy();
-initPaypalCheckout();
