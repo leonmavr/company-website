@@ -170,13 +170,19 @@ function describeCheckoutError(error) {
   if (error.status === 502) {
     return "We could not reach PayPal to confirm the payment. Nothing was lost — please try again in a moment.";
   }
-  // 503 covers both "not configured" and "PayPal rejected our credentials".
-  // They are the same thing from the buyer's side -- the shop is not working --
-  // and neither is a statement about whether they paid.
+  // 502 is the one case where retrying is worth suggesting, so it is the only
+  // message that suggests it.
+  if (error.status === 502) {
+    return "We could not reach PayPal to confirm the payment. Nothing was lost — please try again in a moment.";
+  }
+
+  // 503 means PayPal answered and refused, or our own setup is wrong. Retrying
+  // will fail the same way, so it is not offered: that would have someone
+  // clicking the button forever. It is our problem and the message says so.
   if (error.status === 503) {
     return supportEmail
-      ? `Checkout is unavailable at the moment. Please try again later, or email ${supportEmail} and we will take your order directly.`
-      : "Checkout is unavailable at the moment. Please try again later.";
+      ? `Checkout is unavailable right now. This is a problem on our side rather than yours, and trying again will not help — please email ${supportEmail} and we will take your order directly.`
+      : "Checkout is unavailable right now. This is a problem on our side rather than yours, so please try again later.";
   }
   if (error.message === "Failed to fetch") {
     return `Could not reach the licence server at ${licenseServerBase()}.`;
@@ -438,6 +444,14 @@ async function renderPaypalButtons(root, config) {
 
   container.innerHTML = "";
 
+  // Set when we have already explained a failure ourselves, so the SDK's
+  // generic onError handler does not overwrite a specific explanation with a
+  // vaguer one. That happened: a restricted merchant account produced an
+  // accurate "this is a problem on our side" message, which onError then
+  // replaced with "nothing was charged -- please try again", advice that fails
+  // identically every time and hides the real cause.
+  let reportedFailure = false;
+
   paypal
     .Buttons({
       style: {
@@ -456,6 +470,7 @@ async function renderPaypalButtons(root, config) {
        * edited it could pay whatever they liked for a licence.
        */
       async createOrder() {
+        reportedFailure = false;
         setCheckoutStatus(root, "Starting checkout…");
 
         let started;
@@ -466,14 +481,21 @@ async function renderPaypalButtons(root, config) {
           });
         } catch (error) {
           console.error("checkout/start failed", error);
+          reportedFailure = true;
           setCheckoutStatus(root, describeCheckoutError(error), "error");
+          // Rethrown because this is the documented way to abort the payment
+          // flow: returning normally would hand PayPal an undefined order id.
           throw error;
         }
 
         if (!started.orderId) {
-          const error = new Error("The licence server did not return an order id.");
-          setCheckoutStatus(root, describeCheckoutError(error), "error");
-          throw error;
+          reportedFailure = true;
+          setCheckoutStatus(
+            root,
+            "Checkout could not be started. Please try again in a moment.",
+            "error"
+          );
+          throw new Error("the licence server returned no order id");
         }
 
         return started.orderId;
@@ -491,6 +513,14 @@ async function renderPaypalButtons(root, config) {
 
       onError(error) {
         console.error("paypal error", error);
+
+        // Only fills in when nothing more useful is on screen. The conditions
+        // this fires for are also the ones the SDK reports after a createOrder
+        // failure, and there the real explanation is already showing.
+        if (reportedFailure) {
+          return;
+        }
+
         setCheckoutStatus(
           root,
           "PayPal could not complete the payment. Nothing was charged — please try again.",
