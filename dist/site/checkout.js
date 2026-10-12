@@ -498,6 +498,12 @@ async function renderPaypalButtons(root, config) {
           throw new Error("the licence server returned no order id");
         }
 
+        // The order is open now and the buyer is about to be shown Paypal's
+        // own window. "Starting checkout..." was still on screen while they
+        // were choosing a funding source, which is no longer true -- and a
+        // message that describes a finished step is how a page looks stuck.
+        setCheckoutStatus(root, "Waiting for PayPal…");
+
         return started.orderId;
       },
 
