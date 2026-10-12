@@ -78,6 +78,9 @@ const CHECKOUT = {
   configEndpoint: "/public-config",
   startEndpoint: "/checkout/start",
   completeEndpoint: "/checkout/complete",
+  // Card payments go through Stripe instead, which is a redirect rather than a
+  // button in this page: this only asks for a session and follows the URL.
+  stripeStartEndpoint: "/checkout/stripe/start",
   // Generous, because completing a purchase waits on PayPal's own API from the
   // server, and a payment must not be abandoned because of an impatient client.
   timeoutMs: 45000,
@@ -543,6 +546,106 @@ async function renderPaypalButtons(root, config) {
 // Boot
 // ---------------------------------------------------------------------------
 
+/** Render the Stripe card button, which redirects rather than opening a dialog. */
+function renderCardButton(root, config, priceLabel) {
+  const wrapper = root.querySelector("[data-card-checkout]");
+  const button = root.querySelector("[data-card-button]");
+  if (!wrapper || !button) {
+    return;
+  }
+
+  const label = root.querySelector("[data-card-button-label]");
+  if (label) {
+    label.textContent = `Pay by card — ${priceLabel}`;
+  }
+
+  // Said plainly, because a test-mode shop takes no money while otherwise
+  // behaving like a real one: a licence is still created and emailed, so
+  // nothing else on the page would reveal it.
+  const testNote = root.querySelector("[data-card-test]");
+  if (testNote && config.cardCheckoutTestMode) {
+    testNote.hidden = false;
+  }
+
+  wrapper.hidden = false;
+
+  button.addEventListener("click", async () => {
+    button.disabled = true;
+    const original = button.textContent;
+    button.textContent = "Opening secure checkout…";
+    setCheckoutStatus(root, "");
+
+    let started;
+    try {
+      started = await requestJSON(
+        `${licenseServerBase()}${CHECKOUT.stripeStartEndpoint}`,
+        { method: "POST", body: { platform: currentPlatform(root) } }
+      );
+    } catch (error) {
+      console.error("stripe start failed", error);
+      button.disabled = false;
+      button.textContent = original;
+      setCheckoutStatus(root, describeCheckoutError(error), "error");
+      return;
+    }
+
+    if (!started.url) {
+      button.disabled = false;
+      button.textContent = original;
+      setCheckoutStatus(
+        root,
+        "Checkout could not be started. Please try again in a moment.",
+        "error"
+      );
+      return;
+    }
+
+    // Leave the button disabled. If the redirect is slow the buyer could
+    // otherwise click again and open a second session, which would let them
+    // pay twice.
+    setCheckoutStatus(root, "Taking you to Stripe to pay…");
+    window.location.href = started.url;
+  });
+}
+
+/**
+ * What to say if the buyer has just come back from Stripe's checkout.
+ *
+ * Stripe sends them to ?checkout=success or ?checkout=cancelled. The key is
+ * never shown here: the licence is created by Stripe's webhook, which may not
+ * have run yet, and this page has nothing to look it up with. So it says where
+ * the key is going rather than pretending to have it.
+ *
+ * Returned rather than applied straight away, because the checkout code below
+ * overwrites the status while it renders. Applying this last is what keeps it
+ * on screen -- and it deserves to win, since by then the buyer has paid.
+ */
+function redirectOutcome() {
+  let outcome = "";
+  try {
+    outcome = new URLSearchParams(window.location.search).get("checkout") || "";
+  } catch {
+    return null;
+  }
+
+  if (outcome === "success") {
+    return {
+      message:
+        "Payment received. Your licence key is being emailed to you now — it should arrive within a minute or two.",
+      state: "info"
+    };
+  }
+
+  if (outcome === "cancelled") {
+    return {
+      message: "Checkout cancelled, and nothing was charged.",
+      state: "info"
+    };
+  }
+
+  return null;
+}
+
 async function initCheckout() {
   // main.js's checkout code targets [data-paypal-button], which nothing in the
   // markup defines, so it exits immediately and never competes with this.
@@ -551,13 +654,26 @@ async function initCheckout() {
     return;
   }
 
+  const outcome = redirectOutcome();
+
   initPlatformPicker(root);
+
+  /** Shows the return-from-Stripe message, which outranks anything else. */
+  function showOutcome() {
+    if (outcome) {
+      setCheckoutStatus(root, outcome.message, outcome.state);
+    }
+  }
 
   let config;
   try {
     config = await fetchServerConfig();
   } catch (error) {
     console.error("public-config failed", error);
+    if (outcome) {
+      showOutcome();
+      return;
+    }
     setCheckoutStatus(
       root,
       "The shop is not reachable right now, so buying is unavailable. Everything else on the site still works.",
@@ -576,18 +692,25 @@ async function initCheckout() {
   );
   renderPlatformNote(root);
 
-  if (!config.checkoutEnabled) {
-    // The price is deliberately left hidden. While checkout is closed it would
-    // only advertise a test figure -- the default is a cent -- next to a
-    // message saying nothing can be bought, which reads as a broken shop
-    // rather than one that has not opened.
-    setCheckoutStatus(
-      root,
-      supportEmail
-        ? `Card and PayPal payments are not open yet. Email ${supportEmail} if you would like to buy now.`
-        : "Card and PayPal payments are not open yet. Check back shortly.",
-      "info"
-    );
+  const paypalAvailable = Boolean(config.checkoutEnabled);
+  const cardAvailable = Boolean(config.cardCheckoutEnabled);
+
+  if (!paypalAvailable && !cardAvailable) {
+    // The price is deliberately left hidden. While nothing can be bought it
+    // would only advertise a test figure -- the default is a cent -- next to a
+    // message saying so, which reads as a broken shop rather than one that has
+    // not opened.
+    if (outcome) {
+      showOutcome();
+    } else {
+      setCheckoutStatus(
+        root,
+        supportEmail
+          ? `Card and PayPal payments are not open yet. Email ${supportEmail} if you would like to buy now.`
+          : "Card and PayPal payments are not open yet. Check back shortly.",
+        "info"
+      );
+    }
     return;
   }
 
@@ -607,7 +730,24 @@ async function initCheckout() {
     priceRow.hidden = false;
   }
 
-  await renderPaypalButtons(root, config);
+  if (cardAvailable) {
+    renderCardButton(root, config, priceLabel);
+  }
+
+  if (paypalAvailable) {
+    await renderPaypalButtons(root, config);
+  }
+
+  // The divider is a statement about the page, so it is only true when both
+  // are on offer. Showing it with one method looks like something failed to
+  // load.
+  const divider = root.querySelector("[data-checkout-divider]");
+  if (divider && cardAvailable && paypalAvailable) {
+    divider.hidden = false;
+  }
+
+  // Last, so rendering the buttons cannot wipe it.
+  showOutcome();
 }
 
 if (document.readyState === "loading") {

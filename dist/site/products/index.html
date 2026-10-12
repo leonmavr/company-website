@@ -160,6 +160,24 @@
                     <strong class="checkout-price__value" data-checkout-price></strong>
                   </p>
 
+                  <!--
+                    Card payment, through Stripe. The button only redirects: the
+                    buyer pays on Stripe's own page and the licence key is
+                    emailed by the server, so nothing about the payment happens
+                    in this page.
+                  -->
+                  <div class="checkout-card" data-card-checkout hidden>
+                    <button class="checkout-card__button" type="button" data-card-button>
+                      <span data-card-button-label>Pay by card</span>
+                    </button>
+                    <p class="checkout-card__test" data-card-test hidden>
+                      Test mode — no real money is taken
+                    </p>
+                  </div>
+
+                  <!-- Only shown when both methods are actually available. -->
+                  <p class="checkout-divider" data-checkout-divider hidden><span>or</span></p>
+
                   <div class="checkout-buttons" data-paypal-buttons></div>
 
                   <p class="checkout-status" data-checkout-status hidden></p>
