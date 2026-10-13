@@ -436,10 +436,13 @@ function showPurchasedLicense(result, platform, sessionId) {
   const options = {
     licenseKey: result.licenseKey,
     downloadUrl: result.downloadUrl || "",
-    downloadNote:
-      platform === "windows"
-        ? "The Windows build is not published yet. We will email the download link as soon as it is ready."
-        : "This build is not published yet.",
+    // Only reached when the server has no download URL for the chosen build.
+    // Named from the platform rather than hardcoded per platform: this used to
+    // single out Windows as unpublished, which stopped being true the moment
+    // the Windows build shipped and would have gone on being wrong.
+    downloadNote: `The ${platformLabel(
+      platform
+    )} build is not published yet. The licence works the same, and we will email the download link as soon as it is ready.`,
     note
   };
 
