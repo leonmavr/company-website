@@ -119,6 +119,9 @@ async function copyText(text) {
  *   downloadNote  shown instead of a link when there is no downloadUrl
  *   note          a small line under the heading, e.g. "Emailed to you@x.com"
  *   onSend        optional; when given, a row to re-send the key is included
+ *   onResend      optional; a single button that emails the key to the address
+ *                 the payment came from. Used when that send did not succeed
+ *   resendEmail   the address shown on that button
  *
  * `onSend` being optional is what lets the real checkout reuse this: there, the
  * key has already been emailed to the buyer, so offering to send it somewhere
@@ -131,7 +134,9 @@ function createKeyDialog({
   downloadUrl,
   downloadNote,
   note,
-  onSend
+  onSend,
+  onResend,
+  resendEmail
 }) {
   const overlay = document.createElement("div");
   overlay.className = "key-overlay";
@@ -258,6 +263,27 @@ function createKeyDialog({
     children.push(sendRow);
   }
 
+  // --- optional resend row ------------------------------------------------
+  // A single button, not the email field the test panel uses. Here the address
+  // is not the caller's to choose -- it is the one the payment was made from --
+  // so offering a text box would be inviting input that gets ignored.
+  let resendButton = null;
+
+  if (typeof onResend === "function") {
+    const resendRow = document.createElement("div");
+    resendRow.className = "key-dialog__row key-dialog__row--send";
+
+    resendButton = document.createElement("button");
+    resendButton.type = "button";
+    resendButton.className = "key-dialog__send key-dialog__send--wide";
+    resendButton.textContent = resendEmail
+      ? `Email this key to ${resendEmail}`
+      : "Email me this key";
+
+    resendRow.append(resendButton);
+    children.push(resendRow);
+  }
+
   dialog.append(...children);
   overlay.append(dialog);
 
@@ -345,6 +371,30 @@ function createKeyDialog({
     });
   }
 
+  if (resendButton) {
+    resendButton.addEventListener("click", async () => {
+      resendButton.disabled = true;
+      const original = resendButton.textContent;
+      resendButton.textContent = "Sending…";
+
+      try {
+        await onResend();
+        resendButton.textContent = "Sent";
+        showToast(
+          resendEmail ? `Key sent to ${resendEmail}.` : "Key sent."
+        );
+        setTimeout(() => {
+          resendButton.textContent = original;
+          resendButton.disabled = false;
+        }, 1800);
+      } catch (error) {
+        resendButton.textContent = original;
+        resendButton.disabled = false;
+        showToast(error.message || "Could not send the email.", "error");
+      }
+    });
+  }
+
   function remove() {
     if (toastTimer) {
       clearTimeout(toastTimer);
@@ -372,6 +422,6 @@ function createKeyDialog({
     remove,
     // Where the cursor belongs: the email field when there is one to fill in,
     // otherwise the thing the visitor most likely came here to do.
-    focus: () => (emailField || copyButton).focus()
+    focus: () => (emailField || resendButton || copyButton).focus()
   };
 }

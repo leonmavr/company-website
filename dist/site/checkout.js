@@ -110,6 +110,14 @@ const PLATFORM_LABELS = {
  */
 let supportEmail = "";
 
+/**
+ * Whether the licence server emails keys at all, from /public-config.
+ *
+ * Guards the resend button. Defaults to false, so a page that has not heard
+ * from the server does not offer something the server may not do.
+ */
+let emailsKeys = false;
+
 /** A human name for a platform id, falling back to the id itself. */
 function platformLabel(platform) {
   return PLATFORM_LABELS[platform] || platform;
@@ -407,11 +415,14 @@ async function completePurchase(root, orderID) {
  * Show the key, the download, and where the key was emailed.
  *
  * Reuses the popup from key-dialog.js, so what the test panel rehearses is
- * literally what a paying customer is shown. The row for emailing the key
- * somewhere else is deliberately absent: it has already gone to the address
- * that paid, and offering to send it again only invites mistakes.
+ * literally what a paying customer is shown.
+ *
+ * `sessionId` is optional and only needed to offer the resend button, which is
+ * itself only offered when the email did not go. A buyer whose key never
+ * arrived otherwise has nothing but the copy button and a support address, and
+ * the email is the record they keep.
  */
-function showPurchasedLicense(result, platform) {
+function showPurchasedLicense(result, platform, sessionId) {
   let note;
 
   if (result.emailed) {
@@ -422,7 +433,7 @@ function showPurchasedLicense(result, platform) {
     note = "Please keep a copy of this key — it is needed again if you reinstall.";
   }
 
-  const dialog = createKeyDialog({
+  const options = {
     licenseKey: result.licenseKey,
     downloadUrl: result.downloadUrl || "",
     downloadNote:
@@ -430,7 +441,26 @@ function showPurchasedLicense(result, platform) {
         ? "The Windows build is not published yet. We will email the download link as soon as it is ready."
         : "This build is not published yet.",
     note
-  });
+  };
+
+  // Offered only when the automatic send did not succeed, so the button is
+  // never an invitation to send a second copy to someone who already has one.
+  // Also requires the server to email keys at all: a deployment with delivery
+  // switched off would otherwise offer a button that cannot work.
+  if (sessionId && !result.emailed && emailsKeys) {
+    options.resendEmail = result.email || "";
+    options.onResend = async () => {
+      const retry = await requestJSON(
+        `${licenseServerBase()}${CHECKOUT.stripeStatusEndpoint}` +
+          `?sessionId=${encodeURIComponent(sessionId)}&email=1`
+      );
+      if (!retry.emailed) {
+        throw new Error(retry.deliveryError || "the server could not send it");
+      }
+    };
+  }
+
+  const dialog = createKeyDialog(options);
 
   document.body.append(dialog.overlay);
   dialog.focus();
@@ -722,7 +752,9 @@ async function collectStripeLicence(root) {
     if (result.state === "issued") {
       forgetSessionInUrl();
       setCheckoutStatus(root, "");
-      showPurchasedLicense(result, result.platform || "linux");
+      // The session id is passed on so the popup can offer to re-send the key
+      // if the automatic email did not go.
+      showPurchasedLicense(result, result.platform || "linux", sessionId);
       return;
     }
 
@@ -804,6 +836,10 @@ async function initCheckout() {
   // Used by describeCheckoutError, so a broken checkout can offer a way out
   // that is not "try again later" for ever.
   supportEmail = config.supportEmail || "";
+
+  // Used by showPurchasedLicense, to decide whether offering to re-send the key
+  // is offering something that can actually happen.
+  emailsKeys = Boolean(config.emailsKeys);
 
   // Handed to renderPlatformNote, which reads it when the choice changes.
   root.dataset.checkoutPlatforms = JSON.stringify(

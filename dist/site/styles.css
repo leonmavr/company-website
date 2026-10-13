@@ -2114,6 +2114,18 @@ body {
   outline: none;
 }
 
+/*
+ * The resend button, which is the whole row rather than one half of it.
+ *
+ * The email field it sits beside in the test panel is absent here: the address
+ * is the one the payment came from, not something the buyer chooses, so the
+ * button takes the full width and reads as a single action.
+ */
+.key-dialog__send--wide {
+  flex: 1 1 auto;
+  width: 100%;
+}
+
 .key-dialog__send:disabled {
   cursor: progress;
   opacity: 0.6;
