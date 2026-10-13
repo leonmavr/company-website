@@ -273,6 +273,20 @@ select {
   animation: dropdown-slide 180ms ease;
 }
 
+/* Set for the moment after a submenu choice, so a link that points at an anchor
+   on the page already open -- which scrolls instead of navigating -- does not
+   leave the menu sitting on top of the content just asked for. Cleared on the
+   next mouseenter, in main.js.
+
+   This has to come after the rule above: both match a dropdown with the same
+   specificity, so source order is what decides between them. */
+.nav-item.is-dismissed .nav-dropdown {
+  opacity: 0;
+  transform: translateY(-0.5rem);
+  pointer-events: none;
+  animation: none;
+}
+
 .page-main {
   position: relative;
   z-index: 1;
@@ -1654,6 +1668,17 @@ body {
   flex: 1 0 auto;
   /* reset any conflicting min-height rules so flex sizing works */
   min-height: auto;
+  /*
+   * The header is fixed, so the page has to start below it.
+   *
+   * This is the last of three .app rules, and so the one that wins -- but it is
+   * also the only one with no opinion about the top of the page, so the padding
+   * fell to an earlier rule that is symmetric and predates the fixed header.
+   * That left content starting 28px down while the header occupied the first
+   * 80px: the line above the headline on the home page sat behind the header
+   * and needed a scroll to be read.
+   */
+  padding-top: calc(var(--header-height) + var(--app-pad-y));
 }
 .site-footer {
   flex-shrink: 0;

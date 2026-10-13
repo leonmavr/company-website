@@ -8,11 +8,10 @@ const CONTACT = {
 };
 
 const SITE_COPY = {
-  footerCopy: "Converting your gestures into input."
+  footerCopy: "Making gestures usable."
 };
 
 const navItems = Array.from(document.querySelectorAll(".nav-item.has-menu"));
-const navToggles = Array.from(document.querySelectorAll(".nav-toggle"));
 
 function getContactEmail() {
   return `${CONTACT.emailUser}@${CONTACT.emailDomain}`;
@@ -55,30 +54,33 @@ function closeMenus(exceptItem = null) {
 }
 
 /**
- * Whether this device has no real hover -- a phone or a tablet.
+ * Close a submenu once something in it has been chosen.
  *
- * The nav parents are ordinary links, so a click follows them. That is what
- * makes "Applications" and "Products" usable, but it leaves touch devices with
- * no way to see the submenu at all, since they have no hover to reveal it with.
- * So on touch the first tap opens the submenu instead, and the parent link is
- * still reachable from the destination page.
+ * The parents are ordinary links and the submenu hangs off hover, so most
+ * choices navigate and the menu leaves with the page. The exception is a link
+ * pointing at an anchor on the page already open: that scrolls rather than
+ * navigating, the pointer never leaves the menu, and the menu stays open on top
+ * of the content the visitor just asked to see. Marking the item dismissed
+ * closes it; the mouseenter handler below clears the mark for next time.
  */
-function isTouchOnly() {
-  return window.matchMedia("(hover: none)").matches;
-}
+const navDropdownLinks = Array.from(document.querySelectorAll(".nav-dropdown a"));
 
-navToggles.forEach((toggle) => {
-  toggle.addEventListener("click", (event) => {
-    if (!isTouchOnly()) {
-      return;
+navDropdownLinks.forEach((link) => {
+  link.addEventListener("click", () => {
+    const item = link.closest(".nav-item.has-menu");
+    if (item) {
+      item.classList.add("is-dismissed");
     }
 
-    event.preventDefault();
-
-    const item = toggle.closest(".nav-item");
-    const shouldOpen = item && !item.classList.contains("is-open");
-    closeMenus(shouldOpen ? item : null);
+    // Drop focus as well, or :focus-within holds the menu open on its own.
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
   });
+});
+
+navItems.forEach((item) => {
+  item.addEventListener("mouseenter", () => item.classList.remove("is-dismissed"));
 });
 
 document.addEventListener("click", (event) => {
