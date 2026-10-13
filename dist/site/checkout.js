@@ -700,14 +700,18 @@ async function initCheckout() {
     // would only advertise a test figure -- the default is a cent -- next to a
     // message saying so, which reads as a broken shop rather than one that has
     // not opened.
+    //
+    // No provider is named. This used to say "Card and PayPal", which was
+    // wrong the moment a shop stopped offering PayPal: it named a payment
+    // method that had deliberately been removed.
     if (outcome) {
       showOutcome();
     } else {
       setCheckoutStatus(
         root,
         supportEmail
-          ? `Card and PayPal payments are not open yet. Email ${supportEmail} if you would like to buy now.`
-          : "Card and PayPal payments are not open yet. Check back shortly.",
+          ? `Payments are not open yet. Email ${supportEmail} if you would like to buy now.`
+          : "Payments are not open yet. Check back shortly.",
         "info"
       );
     }

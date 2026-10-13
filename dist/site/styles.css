@@ -17,6 +17,25 @@
   box-sizing: border-box;
 }
 
+/*
+ * The `hidden` attribute must actually hide things.
+ *
+ * It works by way of a user-agent rule (`[hidden] { display: none }`), which any
+ * author `display` declaration outranks. So a `.checkout-divider { display:
+ * flex }` silently defeated it, and elements the JavaScript believed it had
+ * hidden were still on screen: the "or" separator remained between a card
+ * button and nothing, and an empty price row showed a label with no number
+ * beside it.
+ *
+ * Stated once, here, rather than worked around at each site. `!important` is
+ * warranted because the attribute is a statement that the element is not to be
+ * shown, and an author display rule next to it is an accident rather than an
+ * intention.
+ */
+[hidden] {
+  display: none !important;
+}
+
 html {
   scroll-behavior: smooth;
 }
