@@ -62,10 +62,17 @@ function closeMenus(exceptItem = null) {
  * navigating, the pointer never leaves the menu, and the menu stays open on top
  * of the content the visitor just asked to see. Marking the item dismissed
  * closes it; the mouseenter handler below clears the mark for next time.
+ *
+ * The parent link is covered too, not just the items in its menu. It points at
+ * the first of them -- Applications at the desktop-control section, Products at
+ * Freemium -- so it lands on the same page in the same way and needs the same
+ * treatment.
  */
-const navDropdownLinks = Array.from(document.querySelectorAll(".nav-dropdown a"));
+const navChoiceLinks = Array.from(
+  document.querySelectorAll(".nav-dropdown a, .nav-item.has-menu > .nav-toggle")
+);
 
-navDropdownLinks.forEach((link) => {
+navChoiceLinks.forEach((link) => {
   link.addEventListener("click", () => {
     const item = link.closest(".nav-item.has-menu");
     if (item) {
