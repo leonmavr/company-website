@@ -81,11 +81,20 @@ const CHECKOUT = {
   // Card payments go through Stripe instead, which is a redirect rather than a
   // button in this page: this only asks for a session and follows the URL.
   stripeStartEndpoint: "/checkout/stripe/start",
+  // What happened to a card payment, asked when the buyer comes back. Returns
+  // the licence, and issues it if the webhook did not arrive.
+  stripeStatusEndpoint: "/checkout/stripe/status",
   // Generous, because completing a purchase waits on PayPal's own API from the
   // server, and a payment must not be abandoned because of an impatient client.
   timeoutMs: 45000,
   // The config check is only a page load, so it should not hang the button.
-  configTimeoutMs: 6000
+  configTimeoutMs: 6000,
+  // How long to keep asking whether the licence exists, and how often. The
+  // first attempt usually settles it, because the server issues the licence
+  // itself if Stripe's webhook has not arrived; the retries cover the case
+  // where the webhook is mid-flight and the amount check needs it to land.
+  collectAttempts: 8,
+  collectIntervalMs: 2500
 };
 
 const PLATFORM_LABELS = {
@@ -611,27 +620,34 @@ function renderCardButton(root, config, priceLabel) {
 /**
  * What to say if the buyer has just come back from Stripe's checkout.
  *
- * Stripe sends them to ?checkout=success or ?checkout=cancelled. The key is
- * never shown here: the licence is created by Stripe's webhook, which may not
- * have run yet, and this page has nothing to look it up with. So it says where
- * the key is going rather than pretending to have it.
+ * Stripe sends them to ?checkout=success or ?checkout=cancelled. Success also
+ * carries the session id, which is what lets the key actually be shown -- see
+ * collectStripeLicence. Without one there is nothing to look up, so this falls
+ * back to telling them where the key is going.
  *
  * Returned rather than applied straight away, because the checkout code below
  * overwrites the status while it renders. Applying this last is what keeps it
  * on screen -- and it deserves to win, since by then the buyer has paid.
  */
 function redirectOutcome() {
-  let outcome = "";
+  let params;
   try {
-    outcome = new URLSearchParams(window.location.search).get("checkout") || "";
+    params = new URLSearchParams(window.location.search);
   } catch {
     return null;
   }
 
+  const outcome = params.get("checkout") || "";
+
   if (outcome === "success") {
+    // When there is a session id, collectStripeLicence does the talking -- it
+    // can report what actually happened rather than guessing.
+    if (params.get("session_id")) {
+      return null;
+    }
     return {
       message:
-        "Payment received. Your licence key is being emailed to you now — it should arrive within a minute or two.",
+        "Payment received. Your licence key is being emailed to you — it should arrive within a minute or two.",
       state: "info"
     };
   }
@@ -644,6 +660,94 @@ function redirectOutcome() {
   }
 
   return null;
+}
+
+/** The Stripe session id Stripe substituted into the return URL, if any. */
+function stripeSessionFromUrl() {
+  try {
+    return new URLSearchParams(window.location.search).get("session_id") || "";
+  } catch {
+    return "";
+  }
+}
+
+/** Stop the session id sitting in the address bar.
+
+ * It is the token that fetches a licence key, so it should not be left in the
+ * URL to be shared, bookmarked, or picked up from history. Replaced rather than
+ * removed so the back button does not simply re-add it.
+ */
+function forgetSessionInUrl() {
+  try {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("session_id");
+    url.searchParams.set("checkout", "success");
+    window.history.replaceState({}, "", url.toString());
+  } catch {
+    // Cosmetic. Nothing breaks if the URL keeps its query string.
+  }
+}
+
+/**
+ * Collect the licence for a card payment that just completed.
+ *
+ * The buyer has paid and come back, and this is what turns that into a key on
+ * screen. It asks the licence server, which verifies the session with Stripe
+ * and issues the licence if nothing has yet -- so a webhook that never arrived
+ * cannot leave a paying customer with nothing.
+ *
+ * The poll exists because the normal path is a race: Stripe's webhook may land
+ * at any moment, and the first question may be asked before it does.
+ */
+async function collectStripeLicence(root) {
+  const sessionId = stripeSessionFromUrl();
+  if (!sessionId) {
+    return;
+  }
+
+  setCheckoutStatus(root, "Confirming your payment…");
+
+  for (let attempt = 0; attempt < CHECKOUT.collectAttempts; attempt += 1) {
+    let result;
+    try {
+      result = await requestJSON(
+        `${licenseServerBase()}${CHECKOUT.stripeStatusEndpoint}` +
+          `?sessionId=${encodeURIComponent(sessionId)}`
+      );
+    } catch (error) {
+      console.error("stripe status failed", error);
+      break;
+    }
+
+    if (result.state === "issued") {
+      forgetSessionInUrl();
+      setCheckoutStatus(root, "");
+      showPurchasedLicense(result, result.platform || "linux");
+      return;
+    }
+
+    if (result.state !== "pending") {
+      // "unavailable", "unknown" or "failed" -- all cases where asking again
+      // will not help.
+      console.warn("stripe status could not confirm the purchase", result);
+      break;
+    }
+
+    if (attempt < CHECKOUT.collectAttempts - 1) {
+      await new Promise((resolve) => setTimeout(resolve, CHECKOUT.collectIntervalMs));
+    }
+  }
+
+  // Paid, but the key could not be collected. Say so honestly rather than
+  // claiming an email that may never arrive -- and give them a way to reach a
+  // person, because this is the one outcome that needs one.
+  setCheckoutStatus(
+    root,
+    supportEmail
+      ? `Your payment went through, but we could not fetch your licence key automatically. Email ${supportEmail} with your receipt and we will send it straight away.`
+      : "Your payment went through, but we could not fetch your licence key automatically. Please contact support with your receipt.",
+    "error"
+  );
 }
 
 async function initCheckout() {
@@ -670,6 +774,21 @@ async function initCheckout() {
     config = await fetchServerConfig();
   } catch (error) {
     console.error("public-config failed", error);
+
+    // A buyer returning from a successful payment is the one case where the
+    // generic "the shop is not reachable" is the wrong thing to say: they have
+    // already been charged, and telling them the shop is down reads as though
+    // the payment failed. They need to know it went through and how to get
+    // help.
+    if (stripeSessionFromUrl()) {
+      setCheckoutStatus(
+        root,
+        "Your payment went through, but our server is unreachable so we cannot show your licence key here. It should still reach you by email — if it does not arrive shortly, please contact support with your receipt.",
+        "info"
+      );
+      return;
+    }
+
     if (outcome) {
       showOutcome();
       return;
@@ -704,7 +823,13 @@ async function initCheckout() {
     // No provider is named. This used to say "Card and PayPal", which was
     // wrong the moment a shop stopped offering PayPal: it named a payment
     // method that had deliberately been removed.
-    if (outcome) {
+    //
+    // Still collect, if this is someone coming back from a payment: the method
+    // being switched off for new buyers says nothing about a purchase that has
+    // already been made.
+    if (stripeSessionFromUrl()) {
+      await collectStripeLicence(root);
+    } else if (outcome) {
       showOutcome();
     } else {
       setCheckoutStatus(
@@ -750,8 +875,14 @@ async function initCheckout() {
     divider.hidden = false;
   }
 
-  // Last, so rendering the buttons cannot wipe it.
-  showOutcome();
+  // Last of all, and after the buttons, because it overwrites the status while
+  // it works -- and because a buyer returning from a completed payment is the
+  // one visitor whose message must not be clobbered by anything above.
+  if (stripeSessionFromUrl()) {
+    await collectStripeLicence(root);
+  } else {
+    showOutcome();
+  }
 }
 
 if (document.readyState === "loading") {
