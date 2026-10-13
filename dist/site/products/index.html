@@ -80,11 +80,21 @@
 
       <main class="page-main">
         <div class="shell page-shell">
+          <!--
+            The page heading, carried by the small kicker that sits above the
+            product rows rather than by a large statement.
+
+            The "Coming soon..." that used to be here was the largest text on
+            the page and said the least about it -- the page has been selling
+            the full version for a while now.
+
+            Kept as an h1 rather than dropped along with the title: every other
+            page on the site opens with one, and a page with no first-level
+            heading leaves assistive technology and search engines to guess its
+            subject.
+          -->
           <section class="page-intro">
-            <p class="kicker">Products</p>
-            <h1 class="page-title">Coming soon...</h1>
-            <p class="page-summary">
-            </p>
+            <h1 class="kicker">Products</h1>
           </section>
 
           <section class="content-frame product-frame">
@@ -105,8 +115,18 @@
                   </ul>
                 </div>
                 <div class="product-row__action">
-                  <button class="product-download-button" type="button" aria-label="Download freemium">
-                    Download
+                  <!--
+                    A placeholder, not a download. There is no freemium build
+                    published yet, so there is nothing for this button to
+                    fetch -- it has never had a handler.
+
+                    Disabled rather than pointed at the paid archive, which
+                    would hand the full build to anyone who clicked, and
+                    disabled rather than left looking live, which would send
+                    visitors after a download that cannot start.
+                  -->
+                  <button class="product-download-button" type="button" disabled>
+                    Coming soon
                   </button>
                 </div>
               </article>
@@ -188,45 +208,6 @@
               </article>
             </div>
           </section>
-
-          <!--
-            Development-only: issues a real licence without taking payment, so
-            the activation flow can be tested end to end. Hidden unless the page
-            is served from localhost, and the server refuses the request unless
-            it was started with TELEMOUSE_ALLOW_SIMULATE=1.
-          -->
-          <section class="simulate-panel" data-simulate-purchase hidden>
-            <h2 class="simulate-panel__title">Test purchase</h2>
-            <p class="simulate-panel__note">
-              Issues a licence without taking a payment, for testing the
-              activation flow. The badge below says whether those licences are
-              real or from a local mock. Visible on localhost only.
-            </p>
-
-            <!-- Filled in by simulate-purchase.js from GET /health, because a
-                 mock key and a real key look identical and behave identically
-                 against their own server. -->
-            <p class="simulate-mode" data-simulate-mode hidden></p>
-
-            <div class="simulate-panel__controls">
-              <label class="simulate-field">
-                <span>Customer email</span>
-                <input
-                  type="email"
-                  data-simulate-email
-                  value="test@example.com"
-                  autocomplete="off"
-                  spellcheck="false"
-                />
-              </label>
-              <button class="simulate-button" type="button" data-simulate-button>
-                Simulate purchase
-              </button>
-            </div>
-
-            <p class="simulate-status" data-simulate-status hidden></p>
-            <div class="simulate-result" data-simulate-result hidden></div>
-          </section>
         </div>
       </main>
 
@@ -255,13 +236,16 @@
     <script src="../main.js" defer></script>
 
     <!--
-      Order matters. key-dialog.js defines the popup that both of the others
-      show, and checkout.js defines where the licence server is, which
-      simulate-purchase.js derives its endpoints from. With `defer` these run in
-      document order, so each is defined before the file that uses it.
+      Order matters: key-dialog.js defines the popup that checkout.js shows, and
+      with `defer` these run in document order, so each is defined before the
+      file that uses it.
+
+      simulate-purchase.js used to be loaded last here, for a test panel that
+      issued licences without payment. Both are gone: a page whose job is to
+      take money should not also carry a way to skip paying, even one the
+      server refuses to honour in production.
     -->
     <script src="../key-dialog.js" defer></script>
     <script src="../checkout.js" defer></script>
-    <script src="../simulate-purchase.js" defer></script>
   </body>
 </html>
