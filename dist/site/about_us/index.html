@@ -31,21 +31,20 @@
                 <a class="nav-link" href="../index.html">Home</a>
               </li>
               <li class="nav-item has-menu">
-                <button class="nav-link nav-toggle is-active" type="button" aria-expanded="false">
+                <a class="nav-link nav-toggle is-active" href="./index.html" aria-haspopup="true">
                   Applications
-                </button>
+                </a>
                 <div class="nav-dropdown">
                   <a href="#application-1">Full desktop control</a>
                   <a href="#application-2">Shooter game</a>
-                  <a href="#application-3">Touchless piano</a>
-                  <a href="#application-4">Version 0.20 demo</a>
-                  <a href="#application-5">Version 0.22 demo</a>
+                  <a href="#application-3">Game control</a>
+                  <a href="#application-4">Version 0.22 demo</a>
                 </div>
               </li>
               <li class="nav-item has-menu">
-                <button class="nav-link nav-toggle" type="button" aria-expanded="false">
+                <a class="nav-link nav-toggle" href="../products/index.html" aria-haspopup="true">
                   Products
-                </button>
+                </a>
                 <div class="nav-dropdown">
                   <a href="../products/index.html#product-1">Freemium</a>
                   <a href="../products/index.html#product-2">Full version</a>
@@ -90,49 +89,50 @@
 
                 <article class="application-card application-card--placeholder" id="application-3">
                   <div class="application-card__media">
-                    <img src="../img/application_piano.png" alt="Placeholder visual for application 3" />
+                    <img src="../img/application_piano.png" alt="Racing game being driven by hand gestures" />
                   </div>
                   <div class="application-card__body">
-                    <h2>Touchless piano</h2>
+                    <h2>Game control</h2>
                     <p>
-                      Augmented reality piano application with no equipment needed. You can press each key by laying your finger on it for a certain duration.
+                      Drive a racing game entirely by hand, with no controller and no wheel. Built on the Gesleap SDK, it shows the engine running inside a real-time application.
                     </p>
                   </div>
                 </article>
               </div>
 
               <div class="applications-bottom-grid">
-                <article class="video-card application-video-card" id="application-4">
-                  <div class="application-card__body">
-                    <h2>Version 0.20 demo</h2>
-                    <p>
-                      Version 0.20, showcasing the available full desktop control functionality and some custom-mase applications using our software as an engine.
-                    </p>
-                  </div>
-                  <div class="video-wrap">
-                    <video controls preload="metadata" playsinline aria-label="Gesleap demo video 1">
-                      <source
-                        src="https://github.com/leonmavr/company-website/raw/refs/heads/master/dist/site/demo_02_july_25.mp4"
-                        type="video/mp4"
-                      />
-                    </video>
-                  </div>
-                </article>
-
-                <article class="video-card application-video-card" id="application-5">
+                <!--
+                  One demo rather than two. The pair showed the same product at
+                  two different points in time, so a visitor had to work out
+                  which one to watch, and the older clip had been superseded by
+                  the newer one anyway. This is the current build.
+                -->
+                <article
+                  class="video-card application-video-card application-video-card--solo"
+                  id="application-4"
+                >
                   <div class="application-card__body">
                     <h2>Version 0.22 demo</h2>
                     <p>
-                      Version 0.22 demo, with major UI improvements, such as the hand being overlaid as a skeleton instead of relying on a window.
+                      Full gesture control. It allows you to use your hand as a mouse substitute, send keystrokes, or even launch custom commands — such as opening a browser. It even supports two-handed control.
                     </p>
                   </div>
                   <div class="video-wrap">
-                    <video controls preload="metadata" playsinline aria-label="Gesleap demo video 2">
-                      <source
-                        src="https://github.com/leonmavr/company-website/raw/refs/heads/master/dist/site/gesleap_demo_jan_26.mp4"
-                        type="video/mp4"
-                      />
-                    </video>
+                    <!-- youtu.be/cz1BhYRV2BQ. Loaded from youtube-nocookie.com
+                         so that arriving on this page is not itself a tracking
+                         request, and with loading="lazy" so the player is not
+                         fetched by someone who only reads the cards above.
+
+                         `fullscreen` is listed in `allow` rather than using the
+                         older allowfullscreen attribute as well: Chrome warns
+                         that `allow` wins, and it does, so the extra attribute
+                         only adds a console warning and no capability. -->
+                    <iframe
+                      src="https://www.youtube-nocookie.com/embed/cz1BhYRV2BQ"
+                      title="Gesleap version 0.22 demo: full gesture control"
+                      loading="lazy"
+                      allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                    ></iframe>
                   </div>
                 </article>
               </div>

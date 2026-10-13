@@ -46,18 +46,33 @@ function hydrateSiteCopy() {
 
 function closeMenus(exceptItem = null) {
   navItems.forEach((item) => {
-    const isTarget = item === exceptItem;
-    item.classList.toggle("is-open", isTarget);
+    item.classList.toggle("is-open", item === exceptItem);
 
-    const toggle = item.querySelector(".nav-toggle");
-    if (toggle) {
-      toggle.setAttribute("aria-expanded", String(isTarget));
-    }
+    // No aria-expanded to update: the parents are links whose submenu is shown
+    // by hover and focus, not toggle buttons, so aria-haspopup is what describes
+    // them and there is no state here for JS to keep in sync.
   });
+}
+
+/**
+ * Whether this device has no real hover -- a phone or a tablet.
+ *
+ * The nav parents are ordinary links, so a click follows them. That is what
+ * makes "Applications" and "Products" usable, but it leaves touch devices with
+ * no way to see the submenu at all, since they have no hover to reveal it with.
+ * So on touch the first tap opens the submenu instead, and the parent link is
+ * still reachable from the destination page.
+ */
+function isTouchOnly() {
+  return window.matchMedia("(hover: none)").matches;
 }
 
 navToggles.forEach((toggle) => {
   toggle.addEventListener("click", (event) => {
+    if (!isTouchOnly()) {
+      return;
+    }
+
     event.preventDefault();
 
     const item = toggle.closest(".nav-item");

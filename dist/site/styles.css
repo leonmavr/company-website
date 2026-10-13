@@ -389,6 +389,12 @@ select {
   justify-content: center;
   align-items: center;
   min-width: 0;
+  /* Capped and centred to the same width as .product-row__action--checkout
+     below, so the two product rows line up. Left as plain flex this stretched
+     to the whole grid track -- up to 30rem -- and the freemium column sat
+     noticeably wider than the buy column underneath it. */
+  width: min(100%, 24rem);
+  margin-inline: auto;
   padding-left: 0.35rem;
   border-left: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -714,6 +720,14 @@ select {
 .application-video-card {
   display: grid;
   gap: 0.9rem;
+}
+
+/* The only demo now, so it spans the two-column grid and centres itself rather
+   than sitting in the left half with an empty half beside it. */
+.application-video-card--solo {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: min(100%, 52rem);
 }
 
 .content-frame::before {
