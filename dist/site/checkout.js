@@ -37,14 +37,15 @@ const LICENSE_SERVER_DEV = "http://127.0.0.1:8787";
 /**
  * Production: the deployed licence server.
  *
- * Left empty on purpose. Deploying this site before the server exists would
- * otherwise produce a Buy button that fails on click for every visitor, which
- * is worse than one that says it is not open yet.
+ * This was left empty while the server did not exist, so that a site deployed
+ * early would say checkout was not open rather than fail on click. It exists
+ * now: HTTPS with a Let's Encrypt certificate, reachable from here, and the
+ * origin below is the one its CORS allows.
  *
- * Set this to the server's public URL once it is running. A page can also
- * override it without editing this file -- see licenseServerBase().
+ * A page can still override it without editing this file -- see
+ * licenseServerBase() below.
  */
-const LICENSE_SERVER_PROD = "";
+const LICENSE_SERVER_PROD = "https://license.gesleap.com";
 
 /** True when this page is being served locally rather than from the live site. */
 function isLocalDevelopment() {
