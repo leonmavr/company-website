@@ -99,7 +99,7 @@ function showFreemiumDownload(root, platform) {
     // No licenseKey, so the popup drops the key row entirely -- the free
     // edition has no key, and an empty slot for one would suggest something
     // should have been sent.
-    heading: "Gesleap — Free Edition",
+    heading: "Gesleap - Free Edition",
     note: "No licence key is needed. Unzip the download and run the app.",
     edition: "freemium",
     platform,

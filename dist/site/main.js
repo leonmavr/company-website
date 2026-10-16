@@ -1,6 +1,6 @@
 const CONTACT = {
   emailLabel: "Email",
-  emailUser: "contact",
+  emailUser: "hello",
   emailDomain: "gesleap.com",
   address: "Gesleap OÜ, under Dalanta OÜ, Harju maakond, Tallinn, Pärnu mnt 105, 11312",
   linkedinLabel: "LinkedIn",
