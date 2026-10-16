@@ -436,6 +436,10 @@ function showPurchasedLicense(result, platform, sessionId) {
 
   const options = {
     licenseKey: result.licenseKey,
+    // Passed so the popup can name the file to run. The path differs per
+    // platform, and the buyer chose the platform, so this is the one place that
+    // knows which advice to give.
+    platform,
     downloadUrl: result.downloadUrl || "",
     // Only reached when the server has no download URL for the chosen build.
     // Named from the platform rather than hardcoded per platform: this used to

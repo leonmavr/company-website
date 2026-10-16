@@ -110,11 +110,37 @@ async function copyText(text) {
   return ok;
 }
 
+/*
+ * Where the app is run from, once the download has been unzipped.
+ *
+ * Both archives put everything inside one folder named Gesleap, so the path is
+ * relative to wherever the buyer extracted it -- which we cannot know, and
+ * spelling out a home directory would be wrong for anyone who unzipped
+ * somewhere else. A path relative to the download is right regardless.
+ *
+ * A path rather than "double-click the app": the licence prompt on first run is
+ * where a buyer with a fresh download is most likely to stall, and being told
+ * exactly what to run is what gets them past it.
+ *
+ * The two entries differ in more than the separator. On Windows the download
+ * ends in a single .exe. On Linux it is a launcher script that points the
+ * loader at the bundled libraries before starting the real binary next to it,
+ * so that is the file to run.
+ */
+const LAUNCH_PATHS = {
+  linux: "Gesleap/telemouse_overlay",
+  windows: "Gesleap\\telemouse_overlay.exe"
+};
+
 /**
  * Build the popup shown once a licence has been issued.
  *
  * Options:
  *   licenseKey    the key to display (required)
+ *   platform      which build was bought, e.g. "windows"; decides the path in
+ *                 the instructions. An unknown or missing value drops the path
+ *                 rather than guessing at one -- advice that is right for the
+ *                 other platform is worse than no path at all
  *   downloadUrl   where to get the app; "" when that build is not published
  *   downloadNote  shown instead of a link when there is no downloadUrl
  *   note          a small line under the heading, e.g. "Emailed to you@x.com"
@@ -131,6 +157,7 @@ async function copyText(text) {
  */
 function createKeyDialog({
   licenseKey,
+  platform,
   downloadUrl,
   downloadNote,
   note,
@@ -283,6 +310,40 @@ function createKeyDialog({
     resendRow.append(resendButton);
     children.push(resendRow);
   }
+
+  // --- instructions, last ---------------------------------------------------
+  //
+  // The popup hands over a key and says nothing about what to do with it. This
+  // is the answer, placed at the bottom and after everything actionable so it
+  // reads as the closing step rather than competing with the key itself.
+  //
+  // The second sentence appears for every platform and every build, including
+  // the freemium, because entering the key on first run is the same step
+  // wherever the app came from. Only the path is platform-specific.
+  const launchPath = LAUNCH_PATHS[platform];
+
+  const instructions = document.createElement("p");
+  instructions.className = "key-dialog__instructions";
+
+  const instructionsLabel = document.createElement("strong");
+  instructionsLabel.textContent = "Instructions: ";
+  instructions.append(instructionsLabel);
+
+  if (launchPath) {
+    // In a code element because it is the one thing here to be typed or copied
+    // by hand, and it should read as a path rather than as prose.
+    const pathCode = document.createElement("code");
+    pathCode.className = "key-dialog__path";
+    pathCode.textContent = launchPath;
+
+    instructions.append("run the binary at ", pathCode, ". ");
+  }
+
+  instructions.append(
+    "The first time you run it, you will have to enter the licence key you received upon purchase."
+  );
+
+  children.push(instructions);
 
   dialog.append(...children);
   overlay.append(dialog);

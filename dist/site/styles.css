@@ -1851,6 +1851,46 @@ body {
   cursor: default;
 }
 
+/*
+ * What to do with the key.
+ *
+ * Placed last, after the key, the download and any resend button, because it
+ * describes the step that comes after all of those. Separated by a rule so it
+ * reads as closing advice rather than as another thing to act on here.
+ */
+.key-dialog__instructions {
+  margin: 1.1rem 0 0;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.6;
+}
+
+.key-dialog__instructions strong {
+  color: var(--text);
+}
+
+/*
+ * The extracted path, set apart from the sentence around it.
+ *
+ * It is the one detail here a buyer may have to retype, so it should be
+ * unmistakably a path and not a word in a sentence. Overflow breaks rather than
+ * stretching the dialog: a long path is still shorter than the download URL
+ * above it, but the dialog's width must not depend on which build was bought.
+ */
+.key-dialog__path {
+  padding: 0.08rem 0.34rem;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 0.35rem;
+  background: rgba(0, 0, 0, 0.3);
+  color: var(--text);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-size: 0.94em;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
 .key-dialog__copy,
 .key-dialog__send {
   flex: none;
