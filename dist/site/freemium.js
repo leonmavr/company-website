@@ -57,7 +57,7 @@ const FREEMIUM_DOWNLOADS = {
  */
 const FREEMIUM_INSTRUCTIONS =
   "This free edition supports single click (index finger raised) and exit (index and little finger raised). " +
-  "Each run lasts 60 seconds, then the app closes by itself — start it again whenever you like.";
+  "Each run lasts 60 seconds, then the app closes by itself. Start it again whenever you like.";
 
 /**
  * A status line under the download button.

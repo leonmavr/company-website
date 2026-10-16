@@ -100,7 +100,9 @@ const CHECKOUT = {
 
 const PLATFORM_LABELS = {
   windows: "Windows",
-  linux: "Ubuntu / Linux"
+  // "Ubuntu" rather than "Ubuntu / Linux": the build targets Ubuntu and nothing
+  // else is tested, so naming a whole family would promise more than is there.
+  linux: "Ubuntu"
 };
 
 /**
@@ -268,7 +270,9 @@ function initPlatformPicker(root) {
 
   const hint = root.querySelector("[data-os-hint]");
   if (hint) {
-    hint.textContent = `Detected ${platformLabel(detected)} — change it if that is wrong.`;
+    // Dash rather than the em dash this used to have: the rest of the site's copy
+  // avoids them.
+  hint.textContent = `Detected ${platformLabel(detected)} - change it if that is wrong.`;
   }
 
   // The price and the download offered do not depend on the platform, but the

@@ -384,6 +384,33 @@ function createKeyDialog({
     instructionsLine.append("run the binary at ", pathCode, ". ");
   }
 
+  // A prerequisite that only exists on Linux, and one that silently costs the
+  // user everything the app does if it is missed: on Wayland the app can draw
+  // its overlay and track the hand, but cannot move the pointer or click outside
+  // its own window until /dev/uinput has been granted.
+  //
+  // Stated here rather than in the archive's README alone, because this is the
+  // last moment before the download -- a warning read after the app has already
+  // misbehaved is a support message. Both editions ship setup_uinput.sh, so this
+  // is not edition-specific, and it is built in rather than passed by callers so
+  // that neither of them can forget it.
+  //
+  // No `sudo` in the command: the script re-executes itself with sudo and
+  // prompts for the password. Telling people to prefix sudo would be telling
+  // them to do something the script already does.
+  if (platform === "linux") {
+    const setupCode = document.createElement("code");
+    setupCode.className = "key-dialog__path";
+    setupCode.textContent = "./setup_uinput.sh";
+
+    instructionsLine.append(
+      "On Wayland, open a terminal in that folder first (right-click > Open Terminal Here) and run ",
+      setupCode,
+      ", then log out and back in. ",
+      "Without it the overlay appears but cannot control other windows. "
+    );
+  }
+
   instructionsLine.append(
     instructions ||
       "The first time you run it, you will have to enter the licence key you received upon purchase."
