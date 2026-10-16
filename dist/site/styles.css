@@ -414,15 +414,18 @@ select {
 }
 
 /*
- * The Full version's buy column: which system, what it costs, and the payment
- * button.
+ * The action column for a product row: for the Full version, which system,
+ * what it costs, and the payment button; for the Free edition, which system and
+ * the download button.
  *
  * A single vertical column rather than the flex row the other product rows use,
- * because these pieces are read in order -- pick your system, see the price,
- * pay. Laid out as a row they would sit side by side and read as three
- * unrelated things.
+ * because these pieces are read in order -- pick your system, then pay or
+ * download. Laid out as a row they would sit side by side and read as unrelated
+ * things. The two share one rule so the columns cannot drift apart in width or
+ * spacing.
  */
-.product-row__action--checkout {
+.product-row__action--checkout,
+.product-row__action--freemium {
   display: grid;
   align-content: center;
   justify-items: stretch;
@@ -650,10 +653,9 @@ select {
   outline: none;
 }
 
-/* The freemium build is not published, so its button is a disabled placeholder
-   rather than an action. It stays the full size of the live button, so the two
-   product rows still line up, but drops the accent colour: an orange button is
-   one this site is inviting you to press, and pressing this one does nothing. */
+/* Kept for a button that cannot act -- neither edition needs one today, but a
+   build that is withdrawn or not yet published does, and it should not look
+   pressable when pressing it does nothing. */
 .product-download-button:disabled {
   border-color: rgba(255, 255, 255, 0.14);
   background: rgba(255, 255, 255, 0.04);

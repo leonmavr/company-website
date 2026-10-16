@@ -111,20 +111,45 @@
                     <li>Single click only</li>
                   </ul>
                 </div>
-                <div class="product-row__action">
+                <div class="product-row__action product-row__action--freemium" data-freemium>
                   <!--
-                    A placeholder, not a download. There is no freemium build
-                    published yet, so there is nothing for this button to
-                    fetch -- it has never had a handler.
+                    Which build to download, asked for the same reason the paid
+                    row asks: a wrong guess costs a download of over a hundred
+                    megabytes and a confusing first run, so the detected answer
+                    is shown and correctable rather than assumed.
 
-                    Disabled rather than pointed at the paid archive, which
-                    would hand the full build to anyone who clicked, and
-                    disabled rather than left looking live, which would send
-                    visitors after a download that cannot start.
+                    The radio name is NOT "platform". The paid picker above uses
+                    that name and radios sharing a name form ONE group whatever
+                    their markup position, so selecting here would silently
+                    deselect there and the buyer would be told they had chosen a
+                    system they had not.
                   -->
-                  <button class="product-download-button" type="button" disabled>
-                    Coming soon
+                  <fieldset class="os-picker">
+                    <legend class="os-picker__legend">Your system</legend>
+
+                    <label class="os-option">
+                      <input type="radio" name="freemium-platform" value="linux" data-os-option />
+                      <span class="os-option__name">Ubuntu / Linux</span>
+                    </label>
+
+                    <label class="os-option">
+                      <input type="radio" name="freemium-platform" value="windows" data-os-option />
+                      <span class="os-option__name">Windows</span>
+                    </label>
+                  </fieldset>
+
+                  <p class="os-picker__hint" data-os-hint></p>
+
+                  <!--
+                    A real download, unlike the placeholder this replaces. The
+                    links are not written here: they live in freemium.js, and no
+                    licence, payment or server call is involved in getting one.
+                  -->
+                  <button class="product-download-button" type="button" data-freemium-button>
+                    Download free
                   </button>
+
+                  <p class="checkout-status" data-freemium-status hidden></p>
                 </div>
               </article>
 
@@ -249,5 +274,11 @@
     -->
     <script src="../key-dialog.js" defer></script>
     <script src="../checkout.js" defer></script>
+    <!--
+      Loaded last, and it matters. freemium.js reuses the platform picker and
+      helpers that checkout.js defines, so checkout.js has to have run first.
+      Deferred scripts execute in document order, which is what guarantees that.
+    -->
+    <script src="../freemium.js" defer></script>
   </body>
 </html>

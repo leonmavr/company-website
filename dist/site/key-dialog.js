@@ -113,30 +113,57 @@ async function copyText(text) {
 /*
  * Where the app is run from, once the download has been unzipped.
  *
- * Both archives put everything inside one folder named Gesleap, so the path is
- * relative to wherever the buyer extracted it -- which we cannot know, and
- * spelling out a home directory would be wrong for anyone who unzipped
- * somewhere else. A path relative to the download is right regardless.
+ * Both editions put everything inside one folder, so the path is relative to
+ * wherever the buyer extracted it -- which we cannot know, and spelling out a
+ * home directory would be wrong for anyone who unzipped somewhere else. A path
+ * relative to the download is right regardless.
  *
- * A path rather than "double-click the app": the licence prompt on first run is
- * where a buyer with a fresh download is most likely to stall, and being told
- * exactly what to run is what gets them past it.
+ * A path rather than "double-click the app": the first run is where a new user
+ * is most likely to stall, and being told exactly what to run is what gets them
+ * past it.
  *
- * The two entries differ in more than the separator. On Windows the download
- * ends in a single .exe. On Linux it is a launcher script that points the
- * loader at the bundled libraries before starting the real binary next to it,
- * so that is the file to run.
+ * Two dimensions, because the answer differs in both:
+ *
+ *   folder    Gesleap for the paid build, Gesleap-Freemium for the free one.
+ *             Each archive is named after its folder, so the folder is not a
+ *             guess -- it is the archive's own root, which is what these were
+ *             checked against.
+ *
+ *   binary    On Windows the free edition's executable is
+ *             telemouse_overlay_freemium.exe, not telemouse_overlay.exe, so
+ *             the paid path would name a file that is not in the free archive.
+ *             On Linux both editions ship telemouse_overlay, a launcher script
+ *             that points the loader at the bundled libraries before starting
+ *             the real binary next to it -- so that, not the .bin, is the file
+ *             to run.
+ *
+ * These are the only places these strings appear. Do not inline one at a call
+ * site: a wrong path reads as a broken download, and the reader has no way to
+ * tell that the app is fine and the instructions were not.
  */
 const LAUNCH_PATHS = {
-  linux: "Gesleap/telemouse_overlay",
-  windows: "Gesleap\\telemouse_overlay.exe"
+  full: {
+    linux: "Gesleap/telemouse_overlay",
+    windows: "Gesleap\\telemouse_overlay.exe"
+  },
+  freemium: {
+    linux: "Gesleap-Freemium/telemouse_overlay",
+    windows: "Gesleap-Freemium\\telemouse_overlay_freemium.exe"
+  }
 };
 
 /**
- * Build the popup shown once a licence has been issued.
+ * Build the popup shown when someone needs a key, a download, or both.
  *
  * Options:
- *   licenseKey    the key to display (required)
+ *   licenseKey    the key to display. OPTIONAL: when omitted the key row is left
+ *                 out entirely, which is what the free edition uses -- it has no
+ *                 key, so showing an empty one or a placeholder would be a lie
+ *                 about what the download needs
+ *   heading       heading text. Defaults to "Your licence key", which is only
+ *                 right when there IS a key to show
+ *   edition       "full" (default) or "freemium"; picks the row of LAUNCH_PATHS
+ *                 above for the instructions
  *   platform      which build was bought, e.g. "windows"; decides the path in
  *                 the instructions. An unknown or missing value drops the path
  *                 rather than guessing at one -- advice that is right for the
@@ -144,6 +171,9 @@ const LAUNCH_PATHS = {
  *   downloadUrl   where to get the app; "" when that build is not published
  *   downloadNote  shown instead of a link when there is no downloadUrl
  *   note          a small line under the heading, e.g. "Emailed to you@x.com"
+ *   instructions  the sentence that follows the launch path. Defaults to the
+ *                 first-run licence prompt, which the free edition must not
+ *                 claim -- it passes its own text about the gestures it supports
  *   onSend        optional; when given, a row to re-send the key is included
  *   onResend      optional; a single button that emails the key to the address
  *                 the payment came from. Used when that send did not succeed
@@ -157,10 +187,13 @@ const LAUNCH_PATHS = {
  */
 function createKeyDialog({
   licenseKey,
+  heading,
+  edition = "full",
   platform,
   downloadUrl,
   downloadNote,
   note,
+  instructions,
   onSend,
   onResend,
   resendEmail
@@ -181,7 +214,10 @@ function createKeyDialog({
   const title = document.createElement("h2");
   title.className = "key-dialog__title";
   title.id = "key-dialog-title";
-  title.textContent = "Your licence key";
+  // Defaulted rather than required, so the paid checkout call site is
+  // unchanged. Only the free edition passes one, because "Your licence key" is
+  // the wrong heading for a popup that carries no key.
+  title.textContent = heading || "Your licence key";
 
   const closeButton = document.createElement("button");
   closeButton.type = "button";
@@ -202,20 +238,28 @@ function createKeyDialog({
   }
 
   // --- key row:  [key icon] [key] [Copy] ------------------------------------
-  const keyRow = document.createElement("div");
-  keyRow.className = "key-dialog__row";
+  //
+  // Only when there is a key. The free edition has none, and an empty box where
+  // a key would go invites the reader to wonder what they were supposed to have
+  // been sent -- so the whole row is left out rather than shown blank.
+  let copyButton = null;
 
-  const copyButton = document.createElement("button");
-  copyButton.type = "button";
-  copyButton.className = "key-dialog__copy";
-  copyButton.textContent = "Copy";
+  if (licenseKey) {
+    const keyRow = document.createElement("div");
+    keyRow.className = "key-dialog__row";
 
-  const keyValue = document.createElement("code");
-  keyValue.className = "key-dialog__value";
-  keyValue.textContent = licenseKey;
+    copyButton = document.createElement("button");
+    copyButton.type = "button";
+    copyButton.className = "key-dialog__copy";
+    copyButton.textContent = "Copy";
 
-  keyRow.append(keyIcon(), keyValue, copyButton);
-  children.push(keyRow);
+    const keyValue = document.createElement("code");
+    keyValue.className = "key-dialog__value";
+    keyValue.textContent = licenseKey;
+
+    keyRow.append(keyIcon(), keyValue, copyButton);
+    children.push(keyRow);
+  }
 
   // --- download row:  [download icon] [url or note] [Copy] ------------------
   // The key is useless without the app, so the download is presented right
@@ -317,17 +361,18 @@ function createKeyDialog({
   // is the answer, placed at the bottom and after everything actionable so it
   // reads as the closing step rather than competing with the key itself.
   //
-  // The second sentence appears for every platform and every build, including
-  // the freemium, because entering the key on first run is the same step
-  // wherever the app came from. Only the path is platform-specific.
-  const launchPath = LAUNCH_PATHS[platform];
+  // The path is platform-specific AND edition-specific, so it comes from the row
+  // of LAUNCH_PATHS the caller named. The closing sentence belongs to the caller:
+  // the default is the first-run licence prompt, and a build with no licence
+  // must not say that, so the free edition passes its own text.
+  const launchPath = (LAUNCH_PATHS[edition] || {})[platform];
 
-  const instructions = document.createElement("p");
-  instructions.className = "key-dialog__instructions";
+  const instructionsLine = document.createElement("p");
+  instructionsLine.className = "key-dialog__instructions";
 
   const instructionsLabel = document.createElement("strong");
   instructionsLabel.textContent = "Instructions: ";
-  instructions.append(instructionsLabel);
+  instructionsLine.append(instructionsLabel);
 
   if (launchPath) {
     // In a code element because it is the one thing here to be typed or copied
@@ -336,14 +381,15 @@ function createKeyDialog({
     pathCode.className = "key-dialog__path";
     pathCode.textContent = launchPath;
 
-    instructions.append("run the binary at ", pathCode, ". ");
+    instructionsLine.append("run the binary at ", pathCode, ". ");
   }
 
-  instructions.append(
-    "The first time you run it, you will have to enter the licence key you received upon purchase."
+  instructionsLine.append(
+    instructions ||
+      "The first time you run it, you will have to enter the licence key you received upon purchase."
   );
 
-  children.push(instructions);
+  children.push(instructionsLine);
 
   dialog.append(...children);
   overlay.append(dialog);
@@ -383,7 +429,12 @@ function createKeyDialog({
     });
   }
 
-  wireCopyButton(copyButton, licenseKey, "Copy", "Key copied to clipboard.");
+  // Guarded, because the key row is absent in a keyless dialog and there is
+  // then no button to wire. The download row's button is the only one that
+  // always exists when there is a link to copy.
+  if (copyButton) {
+    wireCopyButton(copyButton, licenseKey, "Copy", "Key copied to clipboard.");
+  }
   if (downloadCopy) {
     wireCopyButton(
       downloadCopy,
@@ -481,8 +532,17 @@ function createKeyDialog({
   return {
     overlay,
     remove,
-    // Where the cursor belongs: the email field when there is one to fill in,
-    // otherwise the thing the visitor most likely came here to do.
-    focus: () => (emailField || resendButton || copyButton).focus()
+    // Where the cursor belongs.
+    //
+    // Preference order, and every one of these can be absent: the email field
+    // when there is one to fill in, then a resend button, then the key's Copy
+    // button, then the download's. The keyless dialog -- the free edition --
+    // has none of the first three, so the chain used to end on a null and throw
+    // on click.
+    //
+    // It ends on closeButton because that always exists. A subtle wrong guess
+    // here is a thrown error on the one interaction the popup exists for, so
+    // the fallback needs to be something the dialog cannot be built without.
+    focus: () => (emailField || resendButton || copyButton || downloadCopy || closeButton).focus()
   };
 }
