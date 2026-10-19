@@ -374,6 +374,28 @@ select {
   display: block;
   width: 100%;
   height: auto;
+  /* Scaling from the default centre origin, so the animation grows in place
+     rather than drifting toward a corner. The wrapper's overflow:hidden clips
+     the overhang, which keeps the row's own box unchanged -- the text and the
+     picker beside it never move. */
+  transition: transform 200ms ease;
+}
+
+/* Only where a pointer can actually hover. On a touch screen :hover latches
+   after a tap and the preview would stay enlarged until something else is
+   tapped, which reads as a stuck image rather than a hover effect. */
+@media (hover: hover) {
+  .product-row__media:hover img {
+    transform: scale(1.3);
+  }
+}
+
+/* A 30% scale is motion in its own right. Snap to the end state instead of
+   gliding to it, so the preview still responds but nothing animates. */
+@media (prefers-reduced-motion: reduce) {
+  .product-row__media img {
+    transition: none;
+  }
 }
 
 .product-row__body {
