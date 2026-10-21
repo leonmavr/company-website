@@ -64,13 +64,24 @@
             <div class="applications-layout">
               <div class="applications-top-grid">
                 <article class="application-card application-card--placeholder" id="application-1">
-                  <div class="application-card__media">
-                    <img src="../img/application_desktop_control.png" alt="Placeholder visual for application 1" />
+                  <div class="application-card__media application-card__media--video">
+                    <video
+                      src="../img/demo_desktop.mp4"
+                      poster="../img/demo_desktop_poster.jpg"
+                      width="1280"
+                      height="720"
+                      autoplay
+                      muted
+                      loop
+                      playsinline
+                      preload="metadata"
+                      aria-label="Gesleap driving a desktop: the pointer is moved, windows are dragged and keys are sent by hand gestures"
+                    ></video>
                   </div>
                   <div class="application-card__body">
                     <h2>Full desktop control</h2>
                     <p>
-                      You can fully control your desktop with Gesleap, including the clicks, scrolling, drag n' drop, transmit keystrokes, or close/minimize windows.
+                      It has the same functionality as a mouse, but on top of that it can additionally emit keys or launch applications using gestures.
                     </p>
                   </div>
                 </article>
