@@ -754,6 +754,47 @@ select {
   aspect-ratio: 16 / 9;
 }
 
+/* Hovering a tile's picture blows it up in place. The default centre origin is
+   what keeps it on the same spot; any other origin would drag the frame toward
+   a corner as it grows.
+
+   Unlike the product rows, the overhang is deliberately left visible: the
+   picture is meant to spill over the tile's own text and its neighbours so the
+   detail can actually be read. Nothing in the layout moves -- transform is
+   paint-only, so the card keeps its box and every other element stays put.
+   z-index is what lets the spill paint on top instead of sliding underneath
+   the cards that follow it in the document; only the hovered tile gets it, so
+   at rest the stacking order is untouched. */
+.application-card__media img,
+.application-card__media video {
+  transition: transform 200ms ease;
+}
+
+/* Only where a pointer can actually hover: on a touch screen :hover latches
+   after a tap and the picture would stay enlarged until something else was
+   tapped, which reads as a stuck image rather than a hover effect. */
+@media (hover: hover) {
+  .application-card__media:hover {
+    overflow: visible;
+    position: relative;
+    z-index: 1;
+  }
+
+  .application-card__media:hover img,
+  .application-card__media:hover video {
+    transform: scale(2);
+  }
+}
+
+/* A doubling is motion in its own right. Snap to the end state instead of
+   gliding to it, so the picture still responds but nothing animates. */
+@media (prefers-reduced-motion: reduce) {
+  .application-card__media img,
+  .application-card__media video {
+    transition: none;
+  }
+}
+
 .application-card__body {
   display: grid;
   gap: 0.75rem;
