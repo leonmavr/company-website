@@ -36,7 +36,7 @@
                 </a>
                 <div class="nav-dropdown">
                   <a href="#application-1">Full desktop control</a>
-                  <a href="#application-2">Shooter game</a>
+                  <a href="#application-2">View/manipulate 3D models</a>
                   <a href="#application-3">Custom interfaces</a>
                   <a href="#application-4">Version 0.29 demo</a>
                 </div>
@@ -76,13 +76,39 @@
                 </article>
 
                 <article class="application-card application-card--placeholder" id="application-2">
-                  <div class="application-card__media">
-                    <img src="../img/application_shooter.png" alt="Placeholder visual for application 2" />
+                  <div class="application-card__media application-card__media--video">
+                    <!--
+                      Muted and looping so the browser is allowed to autoplay
+                      it: any sound at all and autoplay is blocked unless the
+                      visitor has interacted, which would leave a still frame
+                      where a demo should be. The audio track is simply not
+                      heard; clicking through to the full demo is where sound
+                      belongs.
+
+                      width/height let the browser reserve the right box before
+                      the first frame arrives, so the card does not jump.
+                      preload="metadata" keeps the 1.6 MB clip out of the initial
+                      page load; `poster` covers the moment before playback and
+                      is a frame from this very video, so there is no flash of
+                      unrelated content.
+                    -->
+                    <video
+                      src="../img/demo_blender.mp4"
+                      poster="../img/demo_blender_poster.jpg"
+                      width="1280"
+                      height="724"
+                      autoplay
+                      muted
+                      loop
+                      playsinline
+                      preload="metadata"
+                      aria-label="Gesleap controlling Blender: the 3D model is rotated, panned and zoomed by hand gestures"
+                    ></video>
                   </div>
                   <div class="application-card__body">
-                    <h2>Shooter game</h2>
+                    <h2>View/manipulate 3D models</h2>
                     <p>
-                      Simple augmented reality shooter game, which uses the depth information of the hand to eject bullets.
+                      You can tailor the application to view 3D objects from different angles, switch between views/textures, or pan and zoom.
                     </p>
                   </div>
                 </article>

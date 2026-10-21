@@ -735,6 +735,25 @@ select {
   object-fit: contain;
 }
 
+/* Video previews sit in the same slot as the images, so they follow the same
+   rule: full width of the column, natural aspect, never overflowing.
+   object-fit keeps the frame intact rather than cropping it -- a cropped demo
+   loses exactly the hand and the model it is meant to be showing. */
+.application-card__media video {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+/* The images are portrait (4/5) but a screen recording is 16:9, so this card
+   gets a landscape box. Without it a widescreen clip sits letterboxed inside a
+   tall empty frame with ~100px of dead space above and below. */
+.application-card__media--video {
+  aspect-ratio: 16 / 9;
+}
+
 .application-card__body {
   display: grid;
   gap: 0.75rem;

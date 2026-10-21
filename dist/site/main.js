@@ -184,3 +184,41 @@ function showEmailModal(email) {
 
 hydrateContactInfo();
 hydrateSiteCopy();
+
+/**
+ * Stop the demo previews from playing for visitors who asked for less motion.
+ *
+ * CSS cannot do this: `animation` and `transition` can be neutralised, but
+ * autoplay is a media element behaviour, not a style. The attribute is in the
+ * markup so the common case costs no JavaScript; here it is undone only for
+ * those who opted out, leaving the poster frame and the play control in place.
+ *
+ * The check is repeated on change, because a preference can be switched while
+ * the page is open.
+ */
+function applyReducedMotionToVideos() {
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+  // Snapshot the videos that opt into autoplay *once*. Re-querying with
+  // `video[autoplay]` would fail: we remove that attribute under reduced
+  // motion, so the element would never be picked up again to resume.
+  const autoplayVideos = Array.from(document.querySelectorAll("video[autoplay]"));
+
+  const sync = () => {
+    autoplayVideos.forEach((video) => {
+      if (reduce.matches) {
+        video.removeAttribute("autoplay");
+        video.pause();
+      } else {
+        video.setAttribute("autoplay", "");
+        // Blocked promises are expected (no interaction yet, or the tab is in
+        // the background) and are not worth surfacing.
+        video.play()?.catch(() => {});
+      }
+    });
+  };
+
+  sync();
+  reduce.addEventListener?.("change", sync);
+}
+
+applyReducedMotionToVideos();
