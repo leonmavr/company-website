@@ -110,7 +110,34 @@
               </div>
 
               <div class="media-frame">
-                <img class="hero-poster" src="./poster.png" alt="Gesleap product poster" />
+                <!--
+                  The intro clip rather than a still. Muted, looping and
+                  playsinline so it can autoplay at all: a single non-silent
+                  frame and browsers refuse to start until the visitor
+                  interacts, which would leave a frozen image where a demo
+                  should be. The source track is silent anyway, so dropping it
+                  costs nothing.
+
+                  width/height let the browser reserve the right box before the
+                  first frame arrives, so the grid does not jump. The poster is
+                  a frame from this very clip, so there is no flash of unrelated
+                  content before playback, and main.js removes `autoplay` for
+                  visitors who asked for reduced motion -- leaving that frame on
+                  screen instead of a blank rectangle.
+                -->
+                <video
+                  class="hero-video"
+                  src="./img/demo_intro.mp4"
+                  poster="./img/demo_intro_poster.jpg"
+                  width="1280"
+                  height="720"
+                  autoplay
+                  muted
+                  loop
+                  playsinline
+                  preload="metadata"
+                  aria-label="Gesleap introduction: a webcam turned into a control device for software"
+                ></video>
               </div>
             </div>
           </section>

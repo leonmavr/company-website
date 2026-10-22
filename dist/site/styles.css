@@ -961,11 +961,18 @@ select {
   padding: 1.4rem;
 }
 
-.hero-poster {
+/* The home tile carries the intro clip. It fills the frame's width instead of
+   being capped the way the old still was: a 25rem cap left the video sitting in
+   the middle of the tile with dead space either side of it, which is not what
+   "the tile's picture" means. width/height come from the element's own
+   attributes, so `height: auto` keeps the 16:9 ratio and the box is reserved
+   before the first frame arrives. */
+.hero-video {
   display: block;
   width: 100%;
-  max-width: 25rem;
+  max-width: 100%;
   height: auto;
+  background: #000;
 }
 
 .cards-grid {
@@ -1601,10 +1608,6 @@ body::after{
   text-align: center;
 }
 
-.panel--home .hero-poster{
-  margin-inline: auto;
-}
-
 /* About page: use more horizontal space (reduce empty right side) */
 .panel--about .copy{
   max-width: 90ch;
@@ -1623,15 +1626,6 @@ body::after{
   font-size: clamp(18px, 2.2vw, 26px);
   font-weight: 400;
   opacity: .9;
-}
-
-.hero-poster{
-  display: block;
-  width: 100%;
-  height: auto;
-  max-height: 45vh;
-  object-fit: contain;
-  margin-top: 1rem;
 }
 
 .is-hidden{ display: none; }
