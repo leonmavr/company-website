@@ -447,13 +447,27 @@ select {
  * spacing.
  */
 .product-row__action--checkout,
-.product-row__action--freemium {
+.product-row__action--freemium,
+.product-row__action--manual {
   display: grid;
   align-content: center;
   justify-items: stretch;
   gap: 0.7rem;
   width: min(100%, 24rem);
   margin-inline: auto;
+}
+
+/* The manual's download is a link rather than a button, so it needs the things
+   a button gets from the browser and an anchor does not: centred text, no
+   underline, and box-sizing that keeps the 1px border inside the 100% width.
+   Everything else -- radius, colours, hover -- is inherited from
+   .product-download-button so the three rows stay identical. */
+a.product-download-button {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  text-decoration: none;
+  text-align: center;
 }
 
 .os-picker {

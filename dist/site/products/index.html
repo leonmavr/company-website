@@ -65,6 +65,7 @@
                 <div class="nav-dropdown">
                   <a href="#product-1">Freemium</a>
                   <a href="#product-2">Full version</a>
+                  <a href="#product-3">Manual</a>
                 </div>
               </li>
               <li class="nav-item">
@@ -248,6 +249,44 @@
 
                   <!-- Only appears when the chosen build is not published yet. -->
                   <p class="checkout-note" data-platform-note hidden></p>
+                </div>
+              </article>
+
+              <article class="product-row" id="product-3">
+                <div class="product-row__media">
+                  <img
+                    src="../img/manual_spin.gif"
+                    alt="Animated preview of the manual: a spinning card"
+                    width="1100"
+                    height="800"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+                <div class="product-row__body">
+                  <h2>Manual</h2>
+                  <p>
+                    Full instruction manual. Read how to get started and how to fine-tune it.
+                  </p>
+                </div>
+                <div class="product-row__action product-row__action--manual">
+                  <!--
+                    A plain link, not a scripted popup like the Free row's.
+                    There is nothing to choose and nothing to issue: the file
+                    is static, so it downloads even with JavaScript off, and
+                    the browser handles it without a dialog in the way.
+
+                    `download` names the saved file rather than leaving it as
+                    whatever the URL ends in, and the same file is served to
+                    every visitor, so a single link is the whole of it.
+                  -->
+                  <a
+                    class="product-download-button"
+                    href="../Gesleap-User-Manual.pdf"
+                    download="Gesleap-User-Manual.pdf"
+                  >
+                    Download manual
+                  </a>
                 </div>
               </article>
             </div>
