@@ -852,6 +852,41 @@ function productIdOf(root) {
   return (root.getAttribute("data-product") || "").trim();
 }
 
+/**
+ * Read a server that predates the second edition as selling exactly one thing.
+ *
+ * The page and the licence server deploy separately, and they did: this page
+ * went live while the server still answered with a single top-level price and
+ * no product list. Every row then failed to find its product and the whole shop
+ * said "not available", including the edition that server could perfectly well
+ * have sold.
+ *
+ * So a response with no `products` is understood as the one product it
+ * describes, under the basic id. Basic keeps selling at the price that server
+ * will actually charge; Ultimate reports that it is unavailable, which is true
+ * -- that server cannot price it -- rather than being guessed at.
+ */
+function normalizeConfig(config) {
+  if (Array.isArray(config.products) && config.products.length) {
+    return config;
+  }
+
+  return {
+    ...config,
+    defaultProduct: "basic",
+    products: [
+      {
+        id: "basic",
+        name: config.productName || "",
+        price: config.price,
+        currency: config.currency,
+        cardCheckoutEnabled: Boolean(config.cardCheckoutEnabled),
+        platforms: Array.isArray(config.platforms) ? config.platforms : []
+      }
+    ]
+  };
+}
+
 /** What the server says this row is selling: price, currency, downloads. */
 function productConfig(config, root) {
   const wanted = productIdOf(root);
@@ -885,7 +920,7 @@ async function initCheckout() {
 
   let config;
   try {
-    config = await fetchServerConfig();
+    config = normalizeConfig(await fetchServerConfig());
   } catch (error) {
     console.error("public-config failed", error);
 
