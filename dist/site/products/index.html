@@ -64,8 +64,9 @@
                 </a>
                 <div class="nav-dropdown">
                   <a href="#product-1">Freemium</a>
-                  <a href="#product-2">Full version</a>
-                  <a href="#product-3">Manual</a>
+                  <a href="#product-2">Basic version</a>
+                  <a href="#product-3">Ultimate</a>
+                  <a href="#product-4">Manual</a>
                 </div>
               </li>
               <li class="nav-item">
@@ -168,7 +169,7 @@
                 <div class="product-row__media">
                   <img
                     src="../img/logo_gcursor_spin.gif"
-                    alt="Animated preview of the full version: a hand moves the cursor and performs gestures"
+                    alt="Animated preview of the basic version: a hand moves the cursor and performs gestures"
                     width="1100"
                     height="800"
                     loading="lazy"
@@ -176,9 +177,10 @@
                   />
                 </div>
                 <div class="product-row__body">
-                  <h2>Full version</h2>
+                  <h2>Basic version</h2>
                   <p>
-                    All the latest features included.
+                    Hand control of your desktop, with the core gestures and full
+                    customization.
                   </p>
                   <ul class="feature-list">
                     <li>Left, right, double click.</li>
@@ -193,6 +195,7 @@
                 <div
                   class="product-row__action product-row__action--checkout"
                   data-checkout
+                  data-product="basic"
                 >
                   <!--
                     Which build to download. The visitor's system is detected
@@ -253,6 +256,85 @@
               </article>
 
               <article class="product-row" id="product-3">
+                <div class="product-row__media">
+                  <img
+                    src="../img/logo_gcursor_spin.gif"
+                    alt="Animated preview of the ultimate version: two hands move apart to zoom"
+                    width="1100"
+                    height="800"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+                <div class="product-row__body">
+                  <h2>Ultimate</h2>
+                  <p>
+                    Everything in the basic version, plus 8 motion-aware inputs:
+                    4 two-handed (zoom in, zoom out, rotate clockwise, rotate
+                    counter-clockwise) and 4 single-handed (pan left, right, up
+                    and down).
+                  </p>
+                  <ul class="feature-list">
+                    <li>Everything in the basic version</li>
+                    <li>Zoom in and out with two hands</li>
+                    <li>Rotate clockwise and counter-clockwise</li>
+                    <li>Pan left, right, up and down with one hand</li>
+                    <li>Switch between motion and gesture modes</li>
+                    <li>Every motion bound to the input of your choice</li>
+                  </ul>
+                </div>
+                <div
+                  class="product-row__action product-row__action--checkout"
+                  data-checkout
+                  data-product="ultimate"
+                >
+                  <!--
+                    The same block as the basic row, deliberately: the price,
+                    the card button and the PayPal buttons are all rendered from
+                    the server's description of *this* product, so the two rows
+                    cannot show or charge each other's price.
+                  -->
+                  <fieldset class="os-picker">
+                    <legend class="os-picker__legend">Your system</legend>
+
+                    <label class="os-option">
+                      <input type="radio" name="ultimate-platform" value="linux" data-os-option />
+                      <span class="os-option__name">Ubuntu</span>
+                    </label>
+
+                    <label class="os-option">
+                      <input type="radio" name="ultimate-platform" value="windows" data-os-option />
+                      <span class="os-option__name">Windows</span>
+                    </label>
+                  </fieldset>
+
+                  <p class="os-picker__hint" data-os-hint></p>
+
+                  <p class="checkout-price" data-checkout-price-row hidden>
+                    <span class="checkout-price__label">One-time payment</span>
+                    <strong class="checkout-price__value" data-checkout-price></strong>
+                  </p>
+
+                  <div class="checkout-card" data-card-checkout hidden>
+                    <button class="checkout-card__button" type="button" data-card-button>
+                      <span data-card-button-label>Pay by card</span>
+                    </button>
+                    <p class="checkout-card__test" data-card-test hidden>
+                      Test mode — no real money is taken
+                    </p>
+                  </div>
+
+                  <p class="checkout-divider" data-checkout-divider hidden><span>or</span></p>
+
+                  <div class="checkout-buttons" data-paypal-buttons></div>
+
+                  <p class="checkout-status" data-checkout-status hidden></p>
+
+                  <p class="checkout-note" data-platform-note hidden></p>
+                </div>
+              </article>
+
+              <article class="product-row" id="product-4">
                 <div class="product-row__media">
                   <img
                     src="../img/manual_spin.gif"

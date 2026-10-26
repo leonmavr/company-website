@@ -1,5 +1,5 @@
 /**
- * Buying the Full version.
+ * Buying an edition: the basic software, or ultimate with relative motion.
  *
  * What this does
  * --------------
@@ -531,7 +531,11 @@ async function renderPaypalButtons(root, config) {
         try {
           started = await requestJSON(`${licenseServerBase()}${CHECKOUT.startEndpoint}`, {
             method: "POST",
-            body: { platform: currentPlatform(root) }
+            // Which edition this order is for. The server prices the order, so
+            // this only says what to sell -- it is not a claim about the
+            // amount, and the capture is checked against the price of whatever
+            // is named here.
+            body: { platform: currentPlatform(root), product: productIdOf(root) }
           });
         } catch (error) {
           console.error("checkout/start failed", error);
@@ -630,7 +634,10 @@ function renderCardButton(root, config, priceLabel) {
     try {
       started = await requestJSON(
         `${licenseServerBase()}${CHECKOUT.stripeStartEndpoint}`,
-        { method: "POST", body: { platform: currentPlatform(root) } }
+        {
+          method: "POST",
+          body: { platform: currentPlatform(root), product: productIdOf(root) }
+        }
       );
     } catch (error) {
       console.error("stripe start failed", error);
@@ -741,6 +748,72 @@ function forgetSessionInUrl() {
  * The poll exists because the normal path is a race: Stripe's webhook may land
  * at any moment, and the first question may be asked before it does.
  */
+/**
+ * Poll the server for the licence behind the returned Stripe session.
+ *
+ * Shared by every checkout row, and started once. There is one session in the
+ * URL, and asking about it once per row would mean two identical polls, two
+ * identical licences returned, and two popups stacked on top of each other.
+ *
+ * The result is cached, including a failure, so a row that starts after the
+ * poll has finished gets the same answer rather than asking again.
+ */
+let stripeCollection = null;
+
+function collectStripeOnce(sessionId) {
+  if (stripeCollection) {
+    return stripeCollection;
+  }
+
+  stripeCollection = (async () => {
+    for (let attempt = 0; attempt < CHECKOUT.collectAttempts; attempt += 1) {
+      let result;
+      try {
+        result = await requestJSON(
+          `${licenseServerBase()}${CHECKOUT.stripeStatusEndpoint}` +
+            `?sessionId=${encodeURIComponent(sessionId)}`
+        );
+      } catch (error) {
+        console.error("stripe status failed", error);
+        return null;
+      }
+
+      if (result.state === "issued") {
+        return result;
+      }
+
+      if (result.state !== "pending") {
+        // "unavailable", "unknown" or "failed" -- all cases where asking again
+        // will not help.
+        console.warn("stripe status could not confirm the purchase", result);
+        return null;
+      }
+
+      if (attempt < CHECKOUT.collectAttempts - 1) {
+        await new Promise((resolve) => setTimeout(resolve, CHECKOUT.collectIntervalMs));
+      }
+    }
+
+    return null;
+  })();
+
+  return stripeCollection;
+}
+
+/** Whether this row sells what the returned session was for. */
+function rowSells(root, result) {
+  const mine = productIdOf(root);
+  const bought = (result && result.product) || "";
+
+  // An unnamed row is the default product, and an unnamed result is a session
+  // from before the editions were recorded. Treating either as a match keeps
+  // the popup appearing exactly once rather than not at all.
+  if (!mine || !bought) {
+    return true;
+  }
+  return mine === bought;
+}
+
 async function collectStripeLicence(root) {
   const sessionId = stripeSessionFromUrl();
   if (!sessionId) {
@@ -749,37 +822,17 @@ async function collectStripeLicence(root) {
 
   setCheckoutStatus(root, "Confirming your payment…");
 
-  for (let attempt = 0; attempt < CHECKOUT.collectAttempts; attempt += 1) {
-    let result;
-    try {
-      result = await requestJSON(
-        `${licenseServerBase()}${CHECKOUT.stripeStatusEndpoint}` +
-          `?sessionId=${encodeURIComponent(sessionId)}`
-      );
-    } catch (error) {
-      console.error("stripe status failed", error);
-      break;
-    }
+  const result = await collectStripeOnce(sessionId);
 
-    if (result.state === "issued") {
-      forgetSessionInUrl();
-      setCheckoutStatus(root, "");
+  if (result) {
+    forgetSessionInUrl();
+    setCheckoutStatus(root, "");
+    if (rowSells(root, result)) {
       // The session id is passed on so the popup can offer to re-send the key
       // if the automatic email did not go.
       showPurchasedLicense(result, result.platform || "linux", sessionId);
-      return;
     }
-
-    if (result.state !== "pending") {
-      // "unavailable", "unknown" or "failed" -- all cases where asking again
-      // will not help.
-      console.warn("stripe status could not confirm the purchase", result);
-      break;
-    }
-
-    if (attempt < CHECKOUT.collectAttempts - 1) {
-      await new Promise((resolve) => setTimeout(resolve, CHECKOUT.collectIntervalMs));
-    }
+    return;
   }
 
   // Paid, but the key could not be collected. Say so honestly rather than
@@ -794,24 +847,41 @@ async function collectStripeLicence(root) {
   );
 }
 
+/** The product a checkout row sells, from its markup. */
+function productIdOf(root) {
+  return (root.getAttribute("data-product") || "").trim();
+}
+
+/** What the server says this row is selling: price, currency, downloads. */
+function productConfig(config, root) {
+  const wanted = productIdOf(root);
+  const products = config.products || [];
+
+  // An empty attribute means "whatever the server sells by default", which is
+  // what a page written before there was a second edition asks for.
+  if (!wanted) {
+    return products.find((p) => p.id === config.defaultProduct) || products[0] || null;
+  }
+
+  return products.find((p) => p.id === wanted) || null;
+}
+
 async function initCheckout() {
   // main.js's checkout code targets [data-paypal-button], which nothing in the
   // markup defines, so it exits immediately and never competes with this.
-  const root = document.querySelector("[data-checkout]");
-  if (!root) {
+  //
+  // One row per edition, each its own root. They share the server config and
+  // the module-level state below (support address, whether keys are emailed),
+  // but nothing else: each renders its own price and asks for its own product,
+  // so the two cannot end up selling each other's edition.
+  const roots = Array.from(document.querySelectorAll("[data-checkout]"));
+  if (!roots.length) {
     return;
   }
 
   const outcome = redirectOutcome();
 
-  initPlatformPicker(root);
-
-  /** Shows the return-from-Stripe message, which outranks anything else. */
-  function showOutcome() {
-    if (outcome) {
-      setCheckoutStatus(root, outcome.message, outcome.state);
-    }
-  }
+  roots.forEach(initPlatformPicker);
 
   let config;
   try {
@@ -824,24 +894,26 @@ async function initCheckout() {
     // already been charged, and telling them the shop is down reads as though
     // the payment failed. They need to know it went through and how to get
     // help.
-    if (stripeSessionFromUrl()) {
+    const returning = stripeSessionFromUrl();
+    roots.forEach((root) => {
+      if (returning) {
+        setCheckoutStatus(
+          root,
+          "Your payment went through, but our server is unreachable so we cannot show your licence key here. It should still reach you by email — if it does not arrive shortly, please contact support with your receipt.",
+          "info"
+        );
+        return;
+      }
+      if (outcome) {
+        setCheckoutStatus(root, outcome.message, outcome.state);
+        return;
+      }
       setCheckoutStatus(
         root,
-        "Your payment went through, but our server is unreachable so we cannot show your licence key here. It should still reach you by email — if it does not arrive shortly, please contact support with your receipt.",
-        "info"
+        "The shop is not reachable right now, so buying is unavailable. Everything else on the site still works.",
+        "error"
       );
-      return;
-    }
-
-    if (outcome) {
-      showOutcome();
-      return;
-    }
-    setCheckoutStatus(
-      root,
-      "The shop is not reachable right now, so buying is unavailable. Everything else on the site still works.",
-      "error"
-    );
+    });
     return;
   }
 
@@ -853,14 +925,46 @@ async function initCheckout() {
   // is offering something that can actually happen.
   emailsKeys = Boolean(config.emailsKeys);
 
-  // Handed to renderPlatformNote, which reads it when the choice changes.
+  // Sequential rather than in parallel: each row may load the PayPal SDK, and
+  // two concurrent loads of the same URL is a race the SDK does not expect.
+  for (const root of roots) {
+    await renderCheckoutRow(root, config, outcome);
+  }
+}
+
+/** Render one checkout row: its price, its buttons, and any return message. */
+async function renderCheckoutRow(root, config, outcome) {
+  /** Shows the return-from-Stripe message, which outranks anything else. */
+  function showOutcome() {
+    if (outcome) {
+      setCheckoutStatus(root, outcome.message, outcome.state);
+    }
+  }
+
+  const product = productConfig(config, root);
+
+  if (!product) {
+    // The row names an edition the server does not sell. Saying so is the only
+    // honest option: rendering it with another edition's price would show a
+    // number that is not what would be charged.
+    setCheckoutStatus(
+      root,
+      "This edition is not available right now. Everything else on the site still works.",
+      "error"
+    );
+    return;
+  }
+
+  // Handed to renderPlatformNote, which reads it when the choice changes. Per
+  // row, because the editions are published separately: Ultimate may have no
+  // build while Basic has both.
   root.dataset.checkoutPlatforms = JSON.stringify(
-    Object.fromEntries((config.platforms || []).map((p) => [p.id, p]))
+    Object.fromEntries((product.platforms || []).map((p) => [p.id, p]))
   );
   renderPlatformNote(root);
 
   const paypalAvailable = Boolean(config.checkoutEnabled);
-  const cardAvailable = Boolean(config.cardCheckoutEnabled);
+  const cardAvailable = Boolean(product.cardCheckoutEnabled);
 
   if (!paypalAvailable && !cardAvailable) {
     // The price is deliberately left hidden. While nothing can be bought it
@@ -892,8 +996,8 @@ async function initCheckout() {
   }
 
   // The price comes from the server, so the page cannot disagree with what is
-  // actually charged.
-  const priceLabel = formatPrice(config.price, config.currency);
+  // actually charged. Per product: the rows sell different things.
+  const priceLabel = formatPrice(product.price, product.currency);
 
   const priceValue = root.querySelector("[data-checkout-price]");
   if (priceValue) {
