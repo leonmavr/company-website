@@ -832,14 +832,13 @@ a.product-download-button {
 .application-video-card {
   display: grid;
   gap: 0.9rem;
-}
-
-/* The only demo now, so it spans the two-column grid and centres itself rather
-   than sitting in the left half with an empty half beside it. */
-.application-video-card--solo {
-  grid-column: 1 / -1;
-  justify-self: center;
-  width: min(100%, 52rem);
+  /* Copy on top, player underneath, and the copy takes the slack.
+     The two cards share a row, so an equal-width grid already makes the
+     players the same size -- but only if their tops line up, which they do not
+     while one paragraph is longer than the other. Letting the body absorb the
+     difference keeps both videos at the bottom of the row, the same height and
+     the same baseline, whatever either says. */
+  grid-template-rows: 1fr auto;
 }
 
 .content-frame::before {

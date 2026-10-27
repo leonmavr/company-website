@@ -39,6 +39,7 @@
                   <a href="#application-2">View/manipulate 3D models</a>
                   <a href="#application-3">Custom gesture applications</a>
                   <a href="#application-4">Version 0.29 demo</a>
+                  <a href="#application-5">Medical imaging demo</a>
                 </div>
               </li>
               <li class="nav-item has-menu">
@@ -152,13 +153,17 @@
 
               <div class="applications-bottom-grid">
                 <!--
-                  One demo rather than two. The pair showed the same product at
-                  two different points in time, so a visitor had to work out
-                  which one to watch, and the older clip had been superseded by
-                  the newer one anyway. This is the current build.
+                  Two demos, side by side and the same size. The left one is the
+                  desktop build at work; the right one is the ultimate edition's
+                  two-handed relative motion driving a CT-style viewer, which is
+                  the thing the mouse-substitute demo cannot show.
+
+                  They are equal columns rather than one wide card so neither
+                  reads as the main event. The copy above each video absorbs the
+                  height difference, so the two players line up.
                 -->
                 <article
-                  class="video-card application-video-card application-video-card--solo"
+                  class="video-card application-video-card"
                   id="application-4"
                 >
                   <div class="application-card__body">
@@ -180,6 +185,29 @@
                     <iframe
                       src="https://www.youtube-nocookie.com/embed/cz1BhYRV2BQ"
                       title="Gesleap version 0.29 demo: full gesture control"
+                      loading="lazy"
+                      allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                    ></iframe>
+                  </div>
+                </article>
+
+                <article class="video-card application-video-card" id="application-5">
+                  <div class="application-card__body">
+                    <h2>Medical imaging demo</h2>
+                    <p>
+                      Two-handed relative motion, from the ultimate edition. Spread both hands to zoom, bring them
+                      together to zoom out, twist them to rotate the model and move one hand to pan — no keyboard, no
+                      mouse, and no training data. Shown here driving a CT-style viewer.
+                    </p>
+                  </div>
+                  <div class="video-wrap">
+                    <!-- youtu.be/xQDaLFJ-QtQ. Same treatment as the clip beside
+                         it: youtube-nocookie so arriving here is not itself a
+                         tracking request, lazy so the player is not fetched by
+                         someone who only reads the cards above. -->
+                    <iframe
+                      src="https://www.youtube-nocookie.com/embed/xQDaLFJ-QtQ"
+                      title="Gesleap ultimate edition: two-handed relative motion driving a medical imaging viewer"
                       loading="lazy"
                       allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                     ></iframe>
